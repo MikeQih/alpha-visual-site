@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Alpha Visual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..700&family=Noto+Sans+SC:wght@400;500&display=swap">
+<style>
+/* Layout: one full-bleed WebGL slab of smoked-glass shards; DOM carries only the packages view, the back label, a toast and a static fallback. Single dark look by design. */
+:root{
+  color-scheme: dark;
+  --bg:#050507;
+  --fg:#ececf0;
+  --mute:rgba(236,236,240,.6);
+  --faint:rgba(236,236,240,.36);
+  --line:rgba(236,236,240,.12);
+  --go:#36d67e;
+  --lav:#b9abff;
+  --sans:"Inter","Noto Sans SC",system-ui,-apple-system,"PingFang SC",sans-serif;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);overflow:hidden;-webkit-font-smoothing:antialiased}
+html.static body{overflow:auto}
+#gl{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.skip button{position:fixed;left:-9999px;top:16px;z-index:9;font:600 13px/1 var(--sans);padding:12px 16px;border-radius:6px;border:1px solid var(--line);background:#141418;color:var(--fg)}
+.skip button:focus-visible{left:max(16px,env(safe-area-inset-left,0px));outline:1px solid var(--lav)}
+
+/* packages view, revealed after the shatter */
+.defs{position:fixed;inset:0;z-index:2;overflow-y:auto;opacity:0;visibility:hidden;transition:opacity .25s ease,visibility 0s linear .25s}
+.defs.show{opacity:1;visibility:visible;transition:opacity .4s ease,visibility 0s}
+.defs .col{position:absolute;left:32.4vw;width:33.9vw;top:calc(35.9vh - clamp(20px,1.36vw,34px));padding-bottom:56px}
+.pk-title{margin:0 0 clamp(14px,1.5vw,30px);font-weight:650;font-size:clamp(20px,1.36vw,34px);line-height:1.2;letter-spacing:-.022em;color:var(--fg);text-wrap:balance}
+.pk-list p{margin:0 0 clamp(12px,1.05vw,24px);font-size:clamp(13.5px,.73vw,18px);line-height:1.72;color:var(--mute);max-width:62ch}
+.pk-list b{color:var(--fg);font-weight:600}
+.pk-list .note{color:var(--faint);margin-top:clamp(18px,1.6vw,32px)}
+@media (max-width:759px){
+  .defs .col{left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));width:auto;top:24vh}
+}
+
+.back{position:fixed;left:-999px;top:-999px;transform:translate(-50%,-50%);z-index:3;background:none;border:0;color:var(--fg);font:500 clamp(12px,.66vw,16px)/1 var(--sans);letter-spacing:.01em;padding:16px 22px;cursor:pointer;opacity:0;pointer-events:none;transition:color .2s}
+.back:hover,.back:focus-visible{color:var(--lav)}
+.back:focus-visible{outline:1px solid var(--lav);outline-offset:-4px;border-radius:8px}
+
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,10px);z-index:6;max-width:calc(100vw - 32px);padding:11px 16px;border-radius:8px;border:1px solid var(--line);background:#141418;color:var(--fg);font:500 13px/1.45 var(--sans);text-align:center;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* static fallback: no WebGL, or reduced motion */
+.st{min-height:100%;background:var(--bg)}
+.st-wrap{max-width:1120px;margin:0 auto;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:14px}
+.st-nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 22px;border:1px solid var(--line);border-radius:16px;background:#111115}
+.st-brand{display:flex;align-items:center;gap:10px;font-weight:600;letter-spacing:-.01em}
+.st-nav a,.st-cta a{color:var(--fg);text-decoration:none}
+.st-nav a:hover,.st-cta a:hover{text-decoration:underline}
+.st-hero{padding:clamp(28px,6vw,80px);border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,#141418,#0c0c0f)}
+.st-eyebrow{margin:0;font-size:11.5px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--faint)}
+.st-hero h1{margin:.45em 0 .35em;font-weight:500;font-size:clamp(48px,9vw,128px);line-height:.97;letter-spacing:-.045em;color:#d4d4d9}
+.st-sub{margin:0;max-width:56ch;line-height:1.5;color:rgba(236,236,240,.55)}
+.st-cta{display:flex;flex-wrap:wrap;align-items:center;gap:22px;margin-top:30px}
+.st-cta button{font:600 14px/1 var(--sans);padding:13px 22px;border:0;border-radius:6px;background:#ececf0;color:#0b0b0d;cursor:pointer;transition:background .2s}
+.st-cta button:hover{background:var(--go)}
+.st-pk{padding:clamp(24px,5vw,64px);border:1px solid var(--line);border-radius:18px;background:#0c0c0f}
+.st .pk-list p{font-size:15px}
+.st footer{padding:8px 4px;color:var(--faint);font-size:12px}
+</style>
+</head>
+<body>
+
+
+<canvas id="gl" aria-hidden="true"></canvas>
+
+<h1 class="sr">Alpha Visual. Visuals that sell. AI product films, launch visuals and brand sites for businesses in Singapore.</h1>
+<div class="skip">
+  <button type="button" id="sk-pk">See packages</button>
+  <button type="button" id="sk-call">Book a call</button>
+</div>
+
+<section id="defs" class="defs" aria-hidden="true" aria-labelledby="defs-title">
+  <div class="col">
+    <h2 class="pk-title" id="defs-title">What we make, in five packages.</h2>
+    <div class="pk-list" id="defs-body"></div>
+  </div>
+</section>
+<button type="button" class="back" id="back" tabindex="-1">← Back</button>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<div id="static" class="st" hidden>
+  <div class="st-wrap">
+    <header class="st-nav">
+      <span class="st-brand"><svg viewBox="0 0 18 18" width="18" height="18" aria-hidden="true"><rect x=".75" y=".75" width="16.5" height="16.5" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M9 4.3 14 13.7H4z" fill="currentColor"/></svg>Alpha Visual</span>
+      <a href="#st-packages">Packages</a>
+    </header>
+    <section class="st-hero">
+      <p class="st-eyebrow">AI visual studio · Singapore</p>
+      <p class="st-hero-h" role="heading" aria-level="2" style="margin:.45em 0 .35em;font-weight:500;font-size:clamp(48px,9vw,128px);line-height:.97;letter-spacing:-.045em;color:#d4d4d9">Visuals<br>that sell.</p>
+      <p class="st-sub">AI product films, launch visuals and brand sites for businesses in Singapore.<br>AI 产品宣传片、视觉物料与品牌官网，3 天起交付。</p>
+      <div class="st-cta"><button type="button" id="st-call">Book a call</button><a href="#st-packages">See packages →</a></div>
+    </section>
+    <section id="st-packages" class="st-pk">
+      <h2 class="pk-title">What we make, in five packages.</h2>
+      <div class="pk-list" id="st-body"></div>
+    </section>
+    <footer>© 2026 Alpha Visual</footer>
+  </div>
+</div>
+
+<template id="pk">
+  <p><b>Product visuals · 产品视觉</b> — Five hero images, one detail page and nine social posts for a single product. Ready in five days.</p>
+  <p><b>Product film · 产品宣传片</b> — A 15 to 30 second AI film, cut in landscape and vertical. Ready in three to five days.</p>
+  <p><b>Event kit · 活动物料</b> — Deck, invitation, roll-up banner and social posts for a tasting, a launch or an annual dinner.</p>
+  <p><b>Brand launch · 品牌上线</b> — Website or landing page, key visual and launch film, built together over two to three weeks.</p>
+  <p><b>Monthly content · 月度内容</b> — A fixed set of images and short videos every month, planned with you.</p>
+  <p class="note">Every package is quoted on its own · 每项单独报价</p>
+</template>
+
+<script>
+(function () {
+  var tpl = document.getElementById('pk');
+  document.getElementById('defs-body').appendChild(tpl.content.cloneNode(true));
+  document.getElementById('st-body').appendChild(tpl.content.cloneNode(true));
+  var toastT;
+  window.__toast = function (msg) {
+    var el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastT);
+    toastT = setTimeout(function () { el.classList.remove('show'); }, 2600);
+  };
+  window.__CONTACT = '联系方式待补充：WhatsApp · 微信 · Email';
+  window.__showStatic = function () {
+    document.documentElement.classList.add('static');
+    document.getElementById('static').hidden = false;
+    document.getElementById('gl').style.display = 'none';
+  };
+  document.getElementById('st-call').addEventListener('click', function () { window.__toast(window.__CONTACT); });
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce) window.__showStatic();
+  else setTimeout(function () { if (!window.__glOK) window.__showStatic(); }, 7000);
+})();
+</script>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+} }
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+main();
+
+function main() {
+  const root = document.documentElement;
+  if (root.classList.contains('static')) return;
+  const $ = (id) => document.getElementById(id);
+  const glCanvas = $('gl');
+  const defs = $('defs');
+  const backBtn = $('back');
+
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas: glCanvas, antialias: true, powerPreference: 'high-performance' });
+  } catch (e) {
+    window.__showStatic();
+    return;
+  }
+  window.__glOK = true;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.setClearColor(0x050507, 1);
+
+  const DEG = Math.PI / 180;
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const easeOutBack = (x) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+  let seed = 11;
+  const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+
+  const scene = new THREE.Scene();
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  scene.environmentIntensity = 0.42;
+  const key = new THREE.DirectionalLight(0xe4ecff, 1.1);
+  key.position.set(-1, 1.25, 1.4);
+  scene.add(key);
+  const camera = new THREE.PerspectiveCamera(30, 1, 1, 10000);
+  const slab = new THREE.Group();
+  scene.add(slab);
+
+  /* ---------- materials ---------- */
+  const GU = { uPtr: { value: new THREE.Vector2(1e5, 1e5) }, uGlow: { value: 0 }, uR: { value: 300 } };
+  function glassMat(glow, irid) {
+    const m = new THREE.MeshPhysicalMaterial({
+      color: 0x17171b, roughness: 0.36, metalness: 0, clearcoat: 0.7, clearcoatRoughness: 0.12,
+      specularIntensity: 0.7, iridescence: irid, iridescenceIOR: 1.3, iridescenceThicknessRange: [250, 650],
+      envMapIntensity: 1
+    });
+    if (glow) {
+      m.onBeforeCompile = (sh) => {
+        Object.assign(sh.uniforms, GU);
+        sh.vertexShader = 'varying vec3 vWP;\n' + sh.vertexShader.replace(
+          '#include <project_vertex>',
+          '#include <project_vertex>\n\tvWP = (modelMatrix * vec4(transformed, 1.0)).xyz;'
+        );
+        sh.fragmentShader = 'uniform vec2 uPtr;\nuniform float uGlow;\nuniform float uR;\nvarying vec3 vWP;\n' + sh.fragmentShader.replace(
+          '#include <emissivemap_fragment>',
+          '#include <emissivemap_fragment>\n\t{ float gd = distance(vWP.xy, uPtr) / uR; totalEmissiveRadiance += vec3(.42, .37, .62) * .2 * exp(-1.6 * gd * gd) * uGlow; }'
+        );
+      };
+      m.customProgramCacheKey = () => 'glass-glow';
+    }
+    return m;
+  }
+  const contentMat = new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, toneMapped: false, side: THREE.DoubleSide });
+
+  /* ---------- pieces: nav slab + five cells ---------- */
+  const pieces = [];
+  for (let i = 0; i < 6; i++) {
+    const pivot = new THREE.Group();
+    slab.add(pivot);
+    const mat = glassMat(true, 0.55);
+    const glass = new THREE.Mesh(new THREE.BufferGeometry(), mat);
+    const content = new THREE.Mesh(new THREE.BufferGeometry(), contentMat);
+    content.renderOrder = 2;
+    pivot.add(glass, content);
+    pivot.visible = false;
+    const pc = {
+      i, nav: i === 0, pivot, glass, content, mat, c: new THREE.Vector2(), halfW: 1, halfH: 1,
+      lift: 0, vl: 0, rx: 0, vrx: 0, ry: 0, vry: 0, h: 0,
+      fly: new THREE.Vector3(), axis: new THREE.Vector3(0, 0, 1), ang: 0, dOut: 0, dBack: 0
+    };
+    glass.userData.pc = pc;
+    content.userData.pc = pc;
+    content.userData.content = true;
+    pieces.push(pc);
+  }
+  const pickables = pieces.flatMap((p) => [p.glass, p.content]);
+
+  /* back sliver */
+  const sl = { pivot: new THREE.Group(), mesh: new THREE.Mesh(new THREE.BufferGeometry(), glassMat(false, 0.35)), s: 0, tx: 0, ty: 0, hover: false, hw: 100, hh: 50, sx: 0, sy: 0 };
+  sl.pivot.add(sl.mesh);
+  sl.pivot.visible = false;
+  scene.add(sl.pivot);
+
+  /* ---------- cut pattern ---------- */
+  const BASE = { tAB: [.22, 0], tBC: [.515, 0], tCE: [.84, 0], bAD: [.34, 1], bDE: [.865, 1], J0: [.385, .72], J1: [.48, .62], J2: [.716, .49] };
+  const EDGE = new Set(['tAB', 'tBC', 'tCE', 'bAD', 'bDE']);
+  const FIXED = { TL: [0, 0], TR: [1, 0], BL: [0, 1], BR: [1, 1] };
+  const CELLS = [
+    ['TL', 'tAB', 'J0', 'bAD', 'BL'],
+    ['tAB', 'tBC', 'J1', 'J0'],
+    ['tBC', 'tCE', 'J2', 'J1'],
+    ['J0', 'J1', 'J2', 'bDE', 'bAD'],
+    ['tCE', 'TR', 'BR', 'bDE', 'J2']
+  ];
+  const DRIFT = {};
+  for (const k in BASE) DRIFT[k] = { px: rnd() * 6.283, py: rnd() * 6.283, tx: 10 + rnd() * 10, ty: 10 + rnd() * 10 };
+
+  function patternPoints(t, push) {
+    const P = { ...FIXED };
+    for (const k in BASE) {
+      const b = BASE[k], d = DRIFT[k], edge = EDGE.has(k);
+      let x = b[0] + (edge ? 0.03 : 0.02) * Math.sin(6.283 * t / d.tx + d.px);
+      let y = b[1] + (edge ? 0 : 0.035 * Math.sin(6.283 * t / d.ty + d.py));
+      if (push) {
+        const dx = x - push[0], dy = y - push[1], dist = Math.hypot(dx, dy);
+        if (dist < 0.6 && dist > 1e-4) {
+          const a = 0.05 * Math.pow(1 - dist / 0.6, 2) * push[2];
+          x += (dx / dist) * a;
+          if (!edge) y += (dy / dist) * a;
+        }
+      }
+      P[k] = [x, y];
+    }
+    return P;
+  }
+
+  /* ---------- geometry helpers ---------- */
+  function signedArea(p) { let a = 0; for (let i = 0; i < p.length; i++) { const q = p[i], r = p[(i + 1) % p.length]; a += q[0] * r[1] - r[0] * q[1]; } return a / 2; }
+  function inset(p, d) {
+    const n = p.length, ccw = signedArea(p) > 0, lines = [];
+    for (let i = 0; i < n; i++) {
+      const a = p[i], b = p[(i + 1) % n];
+      let dx = b[0] - a[0], dy = b[1] - a[1];
+      const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
+      const nx = ccw ? -dy : dy, ny = ccw ? dx : -dx;
+      lines.push({ px: a[0] + nx * d, py: a[1] + ny * d, dx, dy });
+    }
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      const A = lines[(i - 1 + n) % n], B = lines[i];
+      const den = A.dx * B.dy - A.dy * B.dx;
+      if (Math.abs(den) < 1e-6) { out.push([B.px, B.py]); continue; }
+      const t = ((B.px - A.px) * B.dy - (B.py - A.py) * B.dx) / den;
+      out.push([A.px + A.dx * t, A.py + A.dy * t]);
+    }
+    return out;
+  }
+  function centroidOf(p) { let x = 0, y = 0; for (const q of p) { x += q[0]; y += q[1]; } return [x / p.length, y / p.length]; }
+  function roundedShape(p, r, cx, cy) {
+    const n = p.length, s = new THREE.Shape();
+    for (let i = 0; i < n; i++) {
+      const a = p[(i - 1 + n) % n], b = p[i], c = p[(i + 1) % n];
+      const l1 = Math.hypot(a[0] - b[0], a[1] - b[1]) || 1, l2 = Math.hypot(c[0] - b[0], c[1] - b[1]) || 1;
+      const rr = Math.min(r, l1 * 0.45, l2 * 0.45);
+      const p1 = [b[0] + (a[0] - b[0]) / l1 * rr, b[1] + (a[1] - b[1]) / l1 * rr];
+      const p2 = [b[0] + (c[0] - b[0]) / l2 * rr, b[1] + (c[1] - b[1]) / l2 * rr];
+      if (i === 0) s.moveTo(p1[0] - cx, p1[1] - cy); else s.lineTo(p1[0] - cx, p1[1] - cy);
+      s.quadraticCurveTo(b[0] - cx, b[1] - cy, p2[0] - cx, p2[1] - cy);
+    }
+    s.closePath();
+    return s;
+  }
+
+  let L = null;
+  function toWorld(q) {
+    const x = L.portrait ? q[1] : q[0], y = L.portrait ? q[0] : q[1];
+    return [L.x0 + x * L.pw, L.y0 - y * L.ph];
+  }
+
+  function setGeo(pc, poly) {
+    const pts = inset(poly, L.inset);
+    const [cx, cy] = centroidOf(pts);
+    let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
+    for (const q of pts) { minX = Math.min(minX, q[0]); maxX = Math.max(maxX, q[0]); minY = Math.min(minY, q[1]); maxY = Math.max(maxY, q[1]); }
+    const shape = roundedShape(pts, L.radius, cx, cy);
+    const g = new THREE.ExtrudeGeometry(shape, { depth: L.depth, bevelEnabled: true, bevelThickness: L.bevel, bevelSize: L.bevel, bevelSegments: 3, curveSegments: 5 });
+    g.translate(0, 0, -L.depth / 2);
+    const cg = new THREE.ShapeGeometry(shape, 5);
+    const pos = cg.attributes.position, uv = cg.attributes.uv;
+    for (let k = 0; k < pos.count; k++) {
+      uv.setXY(k, (pos.getX(k) + cx - L.left) / L.bw, (pos.getY(k) + cy - L.bottom) / L.bh);
+    }
+    uv.needsUpdate = true;
+    cg.translate(0, 0, L.depth / 2 + L.bevel + 0.6);
+    pc.glass.geometry.dispose(); pc.glass.geometry = g;
+    pc.content.geometry.dispose(); pc.content.geometry = cg;
+    pc.c.set(cx, cy);
+    pc.halfW = Math.max(1, (maxX - minX) / 2);
+    pc.halfH = Math.max(1, (maxY - minY) / 2);
+  }
+
+  /* ---------- pointer ---------- */
+  const ptr = { x: -1, y: -1, inside: false, sx: 0, sy: 0 };
+  function ptrPattern() {
+    const nx = (ptr.sx - L.x0) / L.pw, ny = (L.y0 - ptr.sy) / L.ph;
+    return L.portrait ? [ny, nx] : [nx, ny];
+  }
+  let ptrStr = 0;
+  function rebuildCells() {
+    const push = ptrStr > 0.001 ? [...ptrPattern(), ptrStr] : null;
+    const P = patternPoints(clock, push);
+    CELLS.forEach((keys, j) => setGeo(pieces[j + 1], keys.map((k) => toWorld(P[k]))));
+  }
+
+  /* ---------- printed content ---------- */
+  const cvs = document.createElement('canvas');
+  const cctx = cvs.getContext('2d');
+  let tex = null;
+  const HOT = [];
+  let hot = null;
+  const F = (w, s) => `${w} ${s}px Inter, "Noto Sans SC", system-ui, sans-serif`;
+  const ls = (v) => { try { cctx.letterSpacing = v; } catch (e) { /* older browsers */ } };
+  function rr(c, x, y, w, h, r) {
+    c.beginPath(); c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
+  }
+  function wrap(c, text, maxW) {
+    const toks = text.match(/[⺀-鿿　-〿＀-￯]|[^\s⺀-鿿　-〿＀-￯]+|\s+/g) || [];
+    const out = []; let line = '';
+    for (const t of toks) {
+      const test = line + t;
+      if (c.measureText(test.trimEnd()).width > maxW && line.trim()) { out.push(line.trimEnd()); line = t.trimStart(); }
+      else line = test;
+    }
+    if (line.trim()) out.push(line.trimEnd());
+    return out;
+  }
+  function drawContent() {
+    const c = cctx, d = L.dpr, U = L.U, bw = L.bw, bh = L.bh;
+    c.setTransform(d, 0, 0, d, 0, 0);
+    c.clearRect(0, 0, bw, bh);
+    HOT.length = 0;
+    c.textAlign = 'left';
+
+    /* nav */
+    const padN = Math.max(16, bw * 0.026), my = L.navH / 2;
+    const m = 18 * U, mx0 = padN, my0 = my - m / 2;
+    c.strokeStyle = 'rgba(236,236,240,.92)'; c.lineWidth = 1.5 * U;
+    rr(c, mx0, my0, m, m, 3 * U); c.stroke();
+    c.fillStyle = 'rgba(236,236,240,.92)';
+    c.beginPath(); c.moveTo(mx0 + m / 2, my0 + m * 0.24); c.lineTo(mx0 + m * 0.78, my0 + m * 0.76); c.lineTo(mx0 + m * 0.22, my0 + m * 0.76); c.closePath(); c.fill();
+    c.textBaseline = 'middle';
+    c.font = F(600, 16 * U); ls(`${-0.16 * U}px`);
+    c.fillStyle = 'rgba(236,236,240,.94)';
+    c.fillText('Alpha Visual', mx0 + m + 10 * U, my + 1);
+    ls('0px');
+    if (!L.phone) {
+      c.font = F(500, 14.5 * U);
+      const items = [['work', 'Work'], ['nav-packages', 'Packages'], ['process', 'Process']];
+      const gap = 34 * U, ws = items.map(([, t]) => c.measureText(t).width);
+      let x = bw / 2 - (ws.reduce((a, b) => a + b, 0) + gap * (items.length - 1)) / 2;
+      items.forEach(([id, t], j) => {
+        c.fillStyle = hot === id ? 'rgba(236,236,240,.98)' : 'rgba(236,236,240,.6)';
+        c.fillText(t, x, my + 1);
+        HOT.push({ id, x: x - 8, y: my - 14 * U, w: ws[j] + 16, h: 28 * U });
+        x += ws[j] + gap;
+      });
+    }
+    c.font = F(600, 14.5 * U);
+    const ct = 'Contact', cw = c.measureText(ct).width, cx2 = bw - padN - cw;
+    c.fillStyle = hot === 'contact' ? 'rgba(236,236,240,1)' : 'rgba(236,236,240,.86)';
+    c.fillText(ct, cx2, my + 1);
+    if (hot === 'contact') c.fillRect(cx2, my + 10 * U, cw, 1.2 * U);
+    HOT.push({ id: 'contact', x: cx2 - 8, y: my - 14 * U, w: cw + 16, h: 28 * U });
+
+    /* panel */
+    const oy = L.navH + L.gapNav, pw = L.pw, ph = L.ph;
+    const pad = L.portrait ? pw * 0.07 : pw * 0.055;
+    c.textBaseline = 'alphabetic';
+    let y = oy + ph * 0.135;
+    const es = 11.5 * U;
+    c.font = F(500, es); ls(`${es * 0.2}px`);
+    c.fillStyle = 'rgba(236,236,240,.38)';
+    c.fillText('AI VISUAL STUDIO · SINGAPORE', pad, y);
+
+    const hs = L.portrait ? Math.min(pw * 0.13, ph * 0.075) : Math.min(pw * 0.078, ph * 0.17);
+    y += ph * 0.04 + hs * 0.84;
+    const y1 = y, y2 = y + hs * 0.97;
+    const g = c.createLinearGradient(0, y1 - hs * 0.8, 0, y2 + hs * 0.12);
+    g.addColorStop(0, '#dcdce0'); g.addColorStop(1, '#bdbdc3');
+    c.font = F(500, hs); ls(`${-0.045 * hs}px`);
+    c.fillStyle = g;
+    c.fillText('Visuals', pad - hs * 0.04, y1);
+    c.fillText('that sell.', pad - hs * 0.04, y2);
+    ls('0px');
+
+    y = y2 + Math.max(ph * 0.06, 26 * U);
+    const ss = L.phone ? 14.5 : 16.5 * U;
+    c.font = F(400, ss);
+    c.fillStyle = 'rgba(236,236,240,.55)';
+    const maxW = L.portrait ? pw - pad * 2 : Math.min(pw * 0.4, ss * 34);
+    const lines = [
+      ...wrap(c, 'AI product films, launch visuals and brand sites for businesses in Singapore.', maxW),
+      ...wrap(c, 'AI 产品宣传片、视觉物料与品牌官网，3 天起交付。', maxW)
+    ];
+    lines.forEach((ln, j) => c.fillText(ln, pad, y + j * ss * 1.5));
+    y += (lines.length - 1) * ss * 1.5 + Math.max(ph * 0.05, 24 * U);
+
+    const bh2 = 40 * U, bw2 = 128 * U, bx = pad, by = y;
+    c.fillStyle = hot === 'call' ? '#36d67e' : '#ececf0';
+    rr(c, bx, by, bw2, bh2, 6 * U); c.fill();
+    c.font = F(600, 14 * U); c.fillStyle = '#0b0b0d';
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText('Book a call', bx + bw2 / 2, by + bh2 / 2 + 0.5);
+    c.textAlign = 'left';
+    HOT.push({ id: 'call', x: bx, y: by, w: bw2, h: bh2 });
+    const lx = bx + bw2 + 24 * U, lt = 'See packages →';
+    c.font = F(500, 14 * U);
+    const lw = c.measureText(lt).width;
+    c.fillStyle = 'rgba(236,236,240,.92)';
+    c.fillText(lt, lx, by + bh2 / 2 + 0.5);
+    if (hot === 'link-packages') c.fillRect(lx, by + bh2 / 2 + 10 * U, lw, 1.2 * U);
+    HOT.push({ id: 'link-packages', x: lx - 6, y: by, w: lw + 12, h: bh2 });
+
+    c.textBaseline = 'alphabetic';
+    const fs = 11.5 * U;
+    c.font = F(500, fs); ls(`${fs * 0.04}px`);
+    c.fillStyle = 'rgba(236,236,240,.34)';
+    const fy = oy + ph - Math.max(ph * 0.055, 18 * U);
+    c.fillText('© 2026 Alpha Visual', pad, fy);
+    if (!L.phone) {
+      c.textAlign = 'right';
+      c.fillText('Product films · Visual kits · Brand sites', pw - pad, fy);
+      c.textAlign = 'left';
+    }
+    ls('0px');
+    if (tex) tex.needsUpdate = true;
+  }
+  function hotAt(x, y) {
+    const r = HOT.find((h) => x >= h.x - 4 && x <= h.x + h.w + 4 && y >= h.y - 4 && y <= h.y + h.h + 4);
+    return r ? r.id : null;
+  }
+
+  /* ---------- back sliver ---------- */
+  const SLV = [[.147, .243], [.252, .169], [.287, .277], [.151, .258]];
+  function buildSliver() {
+    let pts, k;
+    if (!L.phone) {
+      k = L.W / 1918;
+      pts = SLV.map(([fx, fy]) => [(fx - 0.5) * L.W, (0.5 - fy) * L.H]);
+    } else {
+      k = 0.55;
+      const raw = SLV.map(([fx, fy]) => [fx * 1440, -fy * 900]);
+      const rc = centroidOf(raw), xs = raw.map((p) => p[0]);
+      const sc = 180 / (Math.max(...xs) - Math.min(...xs));
+      const cy = (0.5 - 0.13) * L.H;
+      pts = raw.map((p) => [(p[0] - rc[0]) * sc, (p[1] - rc[1]) * sc + cy]);
+    }
+    const c = centroidOf(pts);
+    const depth = Math.max(11 * k, 5), bev = Math.max(2.4 * k, 1.2);
+    const g = new THREE.ExtrudeGeometry(roundedShape(pts, Math.max(10 * k, 5), c[0], c[1]), { depth, bevelEnabled: true, bevelThickness: bev, bevelSize: bev, bevelSegments: 3, curveSegments: 6 });
+    g.translate(0, 0, -depth / 2);
+    sl.mesh.geometry.dispose(); sl.mesh.geometry = g;
+    sl.pivot.position.set(c[0], c[1], 20);
+    const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+    sl.hw = (Math.max(...xs) - Math.min(...xs)) / 2;
+    sl.hh = (Math.max(...ys) - Math.min(...ys)) / 2;
+    sl.sx = L.phone ? c[0] + L.W / 2 : 0.219 * L.W;
+    sl.sy = L.phone ? L.H / 2 - c[1] : 0.238 * L.H;
+    backBtn.style.left = sl.sx + 'px';
+    backBtn.style.top = sl.sy + 'px';
+  }
+
+  /* ---------- layout ---------- */
+  function layout() {
+    const W = innerWidth, H = innerHeight, phone = W < 760, portrait = H > W;
+    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+    renderer.setSize(W, H, false);
+    camera.aspect = W / H;
+    const dist = (H / 2) / Math.tan(15 * DEG);
+    camera.position.set(0, 0, dist);
+    camera.near = 1; camera.far = dist * 6;
+    camera.updateProjectionMatrix();
+
+    const mx = phone ? 16 : W * 0.055, my = phone ? 16 : H * 0.085;
+    const bw = W - 2 * mx, bh = H - 2 * my, S = bw / 1730;
+    const gp = Math.max(14 * S, 6);
+    const navH = Math.max(bh * 0.108, 52), gapNav = Math.max(0, 14 - gp);
+    const left = -W / 2 + mx, top = H / 2 - my;
+    L = {
+      W, H, phone, portrait, S, Sm: Math.max(S, 0.45), U: phone ? 0.92 : Math.max(S, 0.82),
+      bw, bh, left, top, bottom: top - bh, navH, gapNav,
+      x0: left, y0: top - navH - gapNav, pw: bw, ph: bh - navH - gapNav,
+      bevel: Math.max(2.6 * S, 1), depth: Math.max(13 * S, 5), radius: Math.max(20 * S, 7)
+    };
+    L.inset = gp / 2 + L.bevel;
+    GU.uR.value = 300 * L.Sm;
+
+    let dpr = Math.max(1.5, Math.min(2.5, window.devicePixelRatio || 1));
+    dpr = Math.min(dpr, 4096 / bw, 4096 / bh);
+    L.dpr = dpr;
+    cvs.width = Math.round(bw * dpr);
+    cvs.height = Math.round(bh * dpr);
+    if (tex) tex.dispose();
+    tex = new THREE.CanvasTexture(cvs);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    contentMat.map = tex;
+    contentMat.needsUpdate = true;
+    drawContent();
+
+    setGeo(pieces[0], [[left, top], [left + bw, top], [left + bw, top - navH], [left, top - navH]]);
+    rebuildCells();
+    buildSliver();
+  }
+
+  /* ---------- state ---------- */
+  let clock = 0, last = performance.now(), acc = 0, started = false, defsShown = false;
+  let anim = { state: 'pre', t0: 0 };
+  let maxOut = 0, maxBack = 0;
+
+  function assignFlights() {
+    pieces.forEach((pc, i) => {
+      let dx = pc.c.x, dy = pc.c.y;
+      const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
+      const R = (0.55 + Math.random() * 0.3) * L.W;
+      pc.fly.set(dx * R, dy * R * 0.7 - L.H * 0.2, (420 + Math.random() * 380) * L.Sm);
+      pc.axis.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
+      pc.ang = (2 + Math.random() * 1.6) * (Math.random() < 0.5 ? -1 : 1);
+      pc.dOut = i === 0 ? 0 : 0.02 + i * 0.025;
+      pc.dBack = i * 0.03;
+    });
+    maxOut = Math.max(...pieces.map((p) => p.dOut));
+    maxBack = Math.max(...pieces.map((p) => p.dBack));
+  }
+  function flightF(pc) {
+    const t = clock - anim.t0;
+    switch (anim.state) {
+      case 'pre': case 'defs': return 1;
+      case 'out': { const q = clamp((t - pc.dOut) / 0.72, 0, 1); return q * q * q; }
+      case 'back': case 'enter': { const q = clamp((t - pc.dBack) / 0.72, 0, 1); return 1 - easeOutBack(q); }
+      default: return 0;
+    }
+  }
+  function setHot(h) {
+    if (h === hot) return;
+    hot = h;
+    drawContent();
+    glCanvas.style.cursor = hot ? 'pointer' : '';
+  }
+  function showDefs(on) {
+    defsShown = on;
+    defs.classList.toggle('show', on);
+    defs.setAttribute('aria-hidden', on ? 'false' : 'true');
+    backBtn.tabIndex = on ? 0 : -1;
+    if (on) setTimeout(() => { if (defsShown) backBtn.focus({ preventScroll: true }); }, 450);
+  }
+  function shatter() {
+    if (anim.state !== 'idle') return;
+    assignFlights();
+    anim = { state: 'out', t0: clock };
+    setHot(null);
+  }
+  function goBack() {
+    if (anim.state !== 'defs') return;
+    showDefs(false);
+    anim = { state: 'back', t0: clock };
+  }
+  const SOON = '这一部分还在制作中';
+  function act(id) {
+    if (id === 'nav-packages' || id === 'link-packages') shatter();
+    else if (id === 'call' || id === 'contact') window.__toast(window.__CONTACT);
+    else window.__toast(SOON);
+  }
+
+  /* ---------- picking ---------- */
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), tmpV = new THREE.Vector3();
+  const NONE = { pc: null, point: null, hot: null };
+  function pick() {
+    if (!started || anim.state !== 'idle' || !ptr.inside) return NONE;
+    ndc.set(ptr.x / L.W * 2 - 1, -(ptr.y / L.H * 2 - 1));
+    ray.setFromCamera(ndc, camera);
+    scene.updateMatrixWorld();
+    const hits = ray.intersectObjects(pickables, false);
+    if (!hits.length) return NONE;
+    const ch = hits.find((h) => h.object.userData.content);
+    const h = ch && ch.uv ? hotAt(ch.uv.x * L.bw, (1 - ch.uv.y) * L.bh) : null;
+    return { pc: hits[0].object.userData.pc, point: hits[0].point, hot: h };
+  }
+
+  /* ---------- per frame ---------- */
+  const qT = new THREE.Quaternion(), qF = new THREE.Quaternion(), eul = new THREE.Euler();
+  let tiltX = 0.8 * DEG, tiltY = -1.2 * DEG, glow = 0;
+  function spring(o, k, v, target, dt) { const a = 170 * (target - o[k]) - 19 * o[v]; o[v] += a * dt; o[k] += o[v] * dt; }
+
+  function updatePiece(pc, p, dt) {
+    const isH = p.pc === pc;
+    let tl = 0, trx = 0, trY = 0;
+    if (isH && p.point) {
+      tl = (pc.nav ? 32 : 50) * L.Sm;
+      const loc = pc.pivot.worldToLocal(tmpV.copy(p.point));
+      const nx = clamp(loc.x / pc.halfW, -1, 1), ny = clamp(loc.y / pc.halfH, -1, 1);
+      const ay = Math.min(0.24, 70 * L.Sm / pc.halfW), ax = Math.min(0.24, 70 * L.Sm / pc.halfH);
+      trY = ay * nx;
+      trx = -ax * ny;
+    }
+    const steps = dt > 0.02 ? 2 : 1, h = dt / steps;
+    for (let s = 0; s < steps; s++) { spring(pc, 'lift', 'vl', tl, h); spring(pc, 'rx', 'vrx', trx, h); spring(pc, 'ry', 'vry', trY, h); }
+    pc.h += ((isH ? 1 : 0) - pc.h) * (1 - Math.exp(-dt * 8));
+    pc.mat.iridescence = 0.55 + 0.45 * pc.h;
+    pc.mat.envMapIntensity = 1 + 0.9 * pc.h;
+    const f = flightF(pc);
+    pc.pivot.visible = started && f < 0.999;
+    pc.pivot.position.set(
+      pc.c.x + pc.fly.x * f,
+      pc.c.y + pc.fly.y * f - L.H * 0.3 * f * Math.abs(f),
+      pc.lift + pc.fly.z * f
+    );
+    qT.setFromEuler(eul.set(pc.rx, pc.ry, 0));
+    qF.setFromAxisAngle(pc.axis, pc.ang * f);
+    pc.pivot.quaternion.copy(qF).multiply(qT);
+  }
+
+  function updateSliver(dt) {
+    const t = clock - anim.t0;
+    const on = (anim.state === 'out' && t > 0.3) || anim.state === 'defs';
+    sl.s += ((on ? 1 : 0) - sl.s) * (1 - Math.exp(-dt * (on ? 6 : 14)));
+    const s = sl.s < 0.003 ? 0 : sl.s;
+    sl.pivot.visible = s > 0;
+    sl.pivot.scale.setScalar(Math.max(1e-3, s));
+    let tx = 0, ty = 0;
+    if (sl.hover) {
+      tx = 0.14 * clamp((ptr.y - sl.sy) / sl.hh, -1, 1);
+      ty = 0.14 * clamp((ptr.x - sl.sx) / sl.hw, -1, 1);
+    }
+    const k = 1 - Math.exp(-dt * 10);
+    sl.tx += (tx - sl.tx) * k; sl.ty += (ty - sl.ty) * k;
+    sl.pivot.rotation.set(
+      0.08 + 0.03 * Math.sin(6.283 * 0.9 * clock + 1.3) + sl.tx,
+      -0.16 + 0.035 * Math.sin(6.283 * clock) + sl.ty,
+      0
+    );
+    backBtn.style.opacity = s.toFixed(3);
+    backBtn.style.pointerEvents = s > 0.6 ? 'auto' : 'none';
+  }
+
+  function frame(now) {
+    const dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
+    last = now; clock += dt;
+    const t = clock - anim.t0;
+    if (anim.state === 'out' && t > 0.72 + maxOut) anim.state = 'defs';
+    if ((anim.state === 'back' || anim.state === 'enter') && t > 0.72 + maxBack + 0.05) anim.state = 'idle';
+    if ((anim.state === 'out' || anim.state === 'defs') && t > 0.28 && !defsShown) showDefs(true);
+
+    const live = ptr.inside && anim.state === 'idle';
+    const nx = ptr.inside ? ptr.x / L.W * 2 - 1 : 0, ny = ptr.inside ? -(ptr.y / L.H * 2 - 1) : 0;
+    const kt = 1 - Math.exp(-dt / 0.3);
+    tiltY += ((nx * 7 - 1.2) * DEG - tiltY) * kt;
+    tiltX += ((-ny * 5.5 + 0.8) * DEG - tiltX) * kt;
+    slab.rotation.set(tiltX, tiltY, 0);
+
+    const wx = ptr.x - L.W / 2, wy = L.H / 2 - ptr.y;
+    const kp = 1 - Math.exp(-dt * 12);
+    ptr.sx += (wx - ptr.sx) * kp; ptr.sy += (wy - ptr.sy) * kp;
+    GU.uPtr.value.set(wx, wy);
+    glow += ((live ? 1 : 0) - glow) * (1 - Math.exp(-dt * 5));
+    GU.uGlow.value = glow;
+    ptrStr += ((live ? 1 : 0) - ptrStr) * (1 - Math.exp(-dt * 4));
+
+    acc += dt;
+    if (started && anim.state !== 'defs' && acc >= 1 / 45) { acc = 0; rebuildCells(); }
+
+    const p = pick();
+    setHot(p.hot);
+    for (const pc of pieces) updatePiece(pc, p, dt);
+    updateSliver(dt);
+    renderer.render(scene, camera);
+    requestAnimationFrame(frame);
+  }
+
+  /* ---------- events ---------- */
+  addEventListener('pointermove', (e) => { ptr.x = e.clientX; ptr.y = e.clientY; ptr.inside = true; }, { passive: true });
+  root.addEventListener('pointerleave', () => { ptr.inside = false; });
+  addEventListener('blur', () => { ptr.inside = false; });
+  glCanvas.addEventListener('pointerdown', (e) => { ptr.x = e.clientX; ptr.y = e.clientY; ptr.inside = true; });
+  glCanvas.addEventListener('pointerup', (e) => { if (e.pointerType !== 'mouse') setTimeout(() => { ptr.inside = false; }, 700); });
+  glCanvas.addEventListener('click', (e) => {
+    ptr.x = e.clientX; ptr.y = e.clientY; ptr.inside = true;
+    const p = pick();
+    if (p.hot) act(p.hot);
+  });
+  backBtn.addEventListener('click', goBack);
+  backBtn.addEventListener('pointerenter', () => { sl.hover = true; });
+  backBtn.addEventListener('pointerleave', () => { sl.hover = false; });
+  addEventListener('keydown', (e) => { if (e.key === 'Escape') goBack(); });
+  $('sk-pk').addEventListener('click', shatter);
+  $('sk-call').addEventListener('click', () => window.__toast(window.__CONTACT));
+  let rT;
+  addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(layout, 120); });
+
+  /* ---------- start ---------- */
+  layout();
+  requestAnimationFrame(frame);
+  const jobs = [
+    ['500 40px Inter', 'Visuals'], ['600 16px Inter', 'Alpha'], ['400 16px Inter', 'AI'],
+    ['400 16px "Noto Sans SC"', '产品宣传片视觉物料与品牌官网天起交付']
+  ].map(([f, s]) => document.fonts.load(f, s));
+  Promise.race([Promise.allSettled(jobs), new Promise((r) => setTimeout(r, 2500))]).then(() => {
+    drawContent();
+    assignFlights();
+    anim = { state: 'enter', t0: clock };
+    started = true;
+  });
+  if (document.fonts && document.fonts.addEventListener) {
+    document.fonts.addEventListener('loadingdone', () => { if (L) drawContent(); });
+  }
+}
+</script>
+
+</body>
+</html>

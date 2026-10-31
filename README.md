@@ -6,7 +6,8 @@ Static HTML, no build step. Netlify publishes the repository root.
 
 | Path | Page |
 | --- | --- |
-| `/` | Studio homepage (glass shards) |
+| `/` | Index of all works with previews |
+| `/work/glass/` | Studio homepage (glass shards) |
 | `/work/hands/` | Dot-matrix hands |
 | `/work/editorial/` | Editorial brand page |
 | `/work/cellar/` | Cellar shelf concept |
