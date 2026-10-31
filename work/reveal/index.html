@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Alpha Visual Reveal</title>
+<meta name="description" content="Move the cursor to see a plain product photo turn into an Alpha Visual campaign image.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@400;500&display=swap">
+<style>
+/* Layout: one full-screen canvas. A plain studio photo of a bottle; a soft lens follows the cursor and shows the same bottle as a finished campaign image. Copy and buttons sit top-left. Single look by design. */
+:root{
+  color-scheme: light;
+  --ink:#1c1a17;
+  --soft:rgba(28,26,23,.62);
+  --paper:#f4efe8;
+  --sky:#7cc3e3;
+  --sans:"Inter","Noto Sans SC",system-ui,-apple-system,"PingFang SC",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#bdbab4}
+body{font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased}
+button,a{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text-decoration:none}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:none}
+.ui{position:fixed;inset:0;pointer-events:none;padding:calc(28px + env(safe-area-inset-top,0px)) max(32px,env(safe-area-inset-right,0px)) 28px max(32px,env(safe-area-inset-left,0px))}
+.ui > *{pointer-events:auto}
+.logo{position:absolute;top:calc(28px + env(safe-area-inset-top,0px));left:max(32px,env(safe-area-inset-left,0px));font-weight:600;font-size:22px;letter-spacing:-.02em}
+.logo i{font-style:normal;color:var(--sky)}
+.menu-btn{position:absolute;top:calc(22px + env(safe-area-inset-top,0px));right:max(28px,env(safe-area-inset-right,0px));width:56px;height:56px;border-radius:50%;background:var(--paper);display:grid;place-items:center;box-shadow:0 6px 24px rgba(0,0,0,.18);transition:transform .3s}
+.menu-btn:hover{transform:scale(1.06)}
+.menu-btn span{display:block;width:20px;height:2px;background:var(--ink);box-shadow:0 6px 0 var(--ink);transform:translateY(-3px)}
+.copy{position:absolute;top:calc(130px + env(safe-area-inset-top,0px));left:max(32px,env(safe-area-inset-left,0px));max-width:min(470px,calc(100vw - 64px))}
+.copy h1{font-weight:500;font-size:clamp(22px,2.2vw,32px);line-height:1.22;letter-spacing:-.02em;text-wrap:balance}
+.copy p{margin-top:12px;font-size:14px;line-height:1.55;color:var(--soft)}
+.ctas{display:flex;gap:10px;margin-top:28px}
+.talk{height:54px;padding:0 30px;border-radius:999px;background:var(--paper);font-weight:500;font-size:15px;box-shadow:0 6px 24px rgba(0,0,0,.12);transition:transform .3s}
+.round{width:54px;height:54px;border-radius:50%;background:var(--sky);display:grid;place-items:center;transition:transform .3s}
+.talk:hover,.round:hover{transform:translateY(-2px)}
+.tags{position:absolute;left:max(32px,env(safe-area-inset-left,0px));bottom:calc(28px + env(safe-area-inset-bottom,0px));display:flex;gap:18px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+.tags b{color:var(--ink);font-weight:600}
+.hint{position:absolute;right:max(32px,env(safe-area-inset-right,0px));bottom:calc(28px + env(safe-area-inset-bottom,0px));font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+
+.menu{position:fixed;inset:0;z-index:5;background:#141210;color:var(--paper);display:grid;grid-template-columns:1fr 1fr;align-items:end;gap:32px;padding:calc(110px + env(safe-area-inset-top,0px)) max(32px,env(safe-area-inset-right,0px)) calc(40px + env(safe-area-inset-bottom,0px)) max(32px,env(safe-area-inset-left,0px));clip-path:circle(0% at calc(100% - 60px) 50px);transition:clip-path .8s cubic-bezier(.7,0,.2,1);pointer-events:none}
+.menu.open{clip-path:circle(150% at calc(100% - 60px) 50px);pointer-events:auto}
+.menu nav{display:flex;flex-direction:column;gap:4px}
+.menu nav a{font-size:clamp(40px,7vw,96px);font-weight:500;letter-spacing:-.04em;line-height:1.02;opacity:.55;transition:opacity .3s}
+.menu nav a:hover{opacity:1}
+.menu .side{display:flex;flex-direction:column;gap:10px;font-size:14px;color:rgba(244,239,232,.6);justify-self:end;text-align:right}
+.menu .side b{color:var(--paper);font-weight:500;font-size:18px}
+.menu .x{position:absolute;top:calc(22px + env(safe-area-inset-top,0px));right:max(28px,env(safe-area-inset-right,0px));width:56px;height:56px;border-radius:50%;background:var(--paper);color:var(--ink);font-size:22px}
+
+.toast{position:fixed;left:50%;bottom:calc(70px + env(safe-area-inset-bottom,0px));transform:translate(-50%,10px);z-index:9;max-width:calc(100vw - 32px);padding:10px 16px;border-radius:999px;background:var(--ink);color:#fff;font-size:13px;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+button:focus-visible,a:focus-visible{outline:2px solid var(--sky);outline-offset:3px}
+@media (max-width:760px){
+  .copy{top:calc(100px + env(safe-area-inset-top,0px))}
+  .tags{display:none}
+  .menu{grid-template-columns:1fr}
+  .menu .side{justify-self:start;text-align:left}
+}
+@media (prefers-reduced-motion:reduce){ *{transition:none !important} }
+</style>
+</head>
+<body>
+<canvas id="c" aria-hidden="true"></canvas>
+<div class="ui">
+  <a class="logo" href="/" aria-label="Alpha Visual, all work">av<i>.</i></a>
+  <button type="button" class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false"><span></span></button>
+  <div class="copy">
+    <h1>Independent AI visual studio turning plain product photos into campaign visuals, films and sites.</h1>
+    <p>把一张普通产品图，变成能卖货的广告大片。</p>
+    <div class="ctas">
+      <button type="button" class="talk" data-contact>Let's talk</button>
+      <a class="round" href="/" aria-label="See all work"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8h11M9 4l4 4-4 4" stroke="#1c1a17" stroke-width="1.6" fill="none"/></svg></a>
+    </div>
+  </div>
+  <div class="tags"><span><b>Before</b> · studio photo</span><span><b>After</b> · campaign visual</span></div>
+  <div class="hint" id="hint">Move to reveal · 移动鼠标查看</div>
+</div>
+
+<div class="menu" id="menu" aria-hidden="true">
+  <button type="button" class="x" id="menuX" aria-label="Close menu">×</button>
+  <nav aria-label="Menu">
+    <a href="/">Work</a>
+    <a href="/work/glass/">Packages</a>
+    <a href="/work/process/">Process</a>
+    <a href="#" data-contact>Contact</a>
+  </nav>
+  <div class="side"><b>Alpha Visual</b><span>Singapore · 新加坡</span><span>联系方式待补充</span></div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  var toastEl = document.getElementById('toast'), tt;
+  function toast(m) { toastEl.textContent = m; toastEl.classList.add('show'); clearTimeout(tt); tt = setTimeout(function () { toastEl.classList.remove('show'); }, 2400); }
+  document.querySelectorAll('[data-contact]').forEach(function (b) { b.addEventListener('click', function (e) { e.preventDefault(); toast('联系方式待补充：WhatsApp · 微信 · Email'); }); });
+  var menu = document.getElementById('menu'), mb = document.getElementById('menuBtn');
+  function setMenu(on) { menu.classList.toggle('open', on); menu.setAttribute('aria-hidden', !on); mb.setAttribute('aria-expanded', on); }
+  mb.addEventListener('click', function () { setMenu(true); });
+  document.getElementById('menuX').addEventListener('click', function () { setMenu(false); });
+  addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
+
+  var c = document.getElementById('c'), g = c.getContext('2d');
+  var base = document.createElement('canvas'), after = document.createElement('canvas'), mask = document.createElement('canvas');
+  var W, H, DPR, geo;
+
+  /* the same bottle, drawn twice: once as a plain studio photo, once as a campaign image */
+  function bottle(x, top, w, h) {
+    var p = new Path2D(), nw = w * 0.27, nh = h * 0.3, sh = h * 0.1, L = x - w / 2, R = x + w / 2, b = top + h, r = w * 0.08;
+    p.moveTo(x - nw / 2, top); p.lineTo(x - nw / 2, top + nh);
+    p.bezierCurveTo(x - nw / 2, top + nh + sh * 0.5, L, top + nh + sh * 0.4, L, top + nh + sh);
+    p.lineTo(L, b - r); p.quadraticCurveTo(L, b, L + r, b); p.lineTo(R - r, b); p.quadraticCurveTo(R, b, R, b - r);
+    p.lineTo(R, top + nh + sh); p.bezierCurveTo(R, top + nh + sh * 0.4, x + nw / 2, top + nh + sh * 0.5, x + nw / 2, top + nh);
+    p.lineTo(x + nw / 2, top); p.closePath();
+    return { path: p, labelY: top + nh + sh + h * 0.12, labelH: h * 0.28, L: L, w: w };
+  }
+  function grain(k, w, h, a) {
+    var n = Math.round(w * h / 140);
+    for (var i = 0; i < n; i++) { var r = Math.sin(i * 12.9898) * 43758.5453; r -= Math.floor(r); var r2 = Math.sin(i * 78.233 + 1.7) * 9301.7; r2 -= Math.floor(r2); k.fillStyle = r < 0.5 ? 'rgba(0,0,0,' + a + ')' : 'rgba(255,255,255,' + a + ')'; k.fillRect(r2 * w, r * h, 1.4 * DPR, 1.4 * DPR); }
+  }
+  function drawBase(k) {
+    var w = base.width, h = base.height;
+    var bg = k.createLinearGradient(0, 0, 0, h); bg.addColorStop(0, '#cfccc6'); bg.addColorStop(1, '#a8a59f'); k.fillStyle = bg; k.fillRect(0, 0, w, h);
+    var fl = geo.floor; k.fillStyle = 'rgba(0,0,0,.08)'; k.fillRect(0, fl, w, h - fl);
+    k.fillStyle = 'rgba(0,0,0,.28)'; k.beginPath(); k.ellipse(geo.x + geo.w * 0.18, fl, geo.w * 0.8, geo.w * 0.08, 0, 0, Math.PI * 2); k.fill();
+    var b = bottle(geo.x, geo.top, geo.w, geo.h);
+    var bgd = k.createLinearGradient(b.L, 0, b.L + b.w, 0); bgd.addColorStop(0, '#3e3d3b'); bgd.addColorStop(0.5, '#2f2e2c'); bgd.addColorStop(1, '#1f1e1d');
+    k.fillStyle = bgd; k.fill(b.path);
+    k.fillStyle = '#ecebe7'; k.fillRect(b.L + b.w * 0.08, b.labelY, b.w * 0.84, b.labelH);
+    k.fillStyle = '#9a9893'; k.font = '600 ' + Math.round(b.w * 0.09) + 'px Inter, sans-serif'; k.textAlign = 'center';
+    k.fillText('SAMPLE', geo.x, b.labelY + b.labelH * 0.56);
+    grain(k, w, h, 0.05);
+  }
+  function drawAfter(k) {
+    var w = after.width, h = after.height, x = geo.x, fl = geo.floor;
+    var bg = k.createRadialGradient(x, geo.top + geo.h * 0.45, 10, x, geo.top + geo.h * 0.45, Math.max(w, h) * 0.75);
+    bg.addColorStop(0, '#6b2c12'); bg.addColorStop(0.35, '#2a0f07'); bg.addColorStop(1, '#070302'); k.fillStyle = bg; k.fillRect(0, 0, w, h);
+    for (var s = 0; s < 6; s++) { var sx = x + Math.sin(s * 2.1) * geo.w * 1.6, sy = geo.top + geo.h * (0.1 + s * 0.12); var sm = k.createRadialGradient(sx, sy, 0, sx, sy, geo.w * 1.1); sm.addColorStop(0, 'rgba(255,190,130,.10)'); sm.addColorStop(1, 'rgba(255,190,130,0)'); k.fillStyle = sm; k.fillRect(0, 0, w, h); }
+    var halo = k.createRadialGradient(x, geo.top + geo.h * 0.55, 0, x, geo.top + geo.h * 0.55, geo.w * 1.6); halo.addColorStop(0, 'rgba(255,170,90,.55)'); halo.addColorStop(1, 'rgba(255,170,90,0)'); k.fillStyle = halo; k.fillRect(0, 0, w, h);
+    var flg = k.createLinearGradient(0, fl, 0, h); flg.addColorStop(0, '#1a0904'); flg.addColorStop(1, '#050201'); k.fillStyle = flg; k.fillRect(0, fl, w, h - fl);
+    var b = bottle(x, geo.top, geo.w, geo.h);
+    k.save(); k.translate(0, fl * 2); k.scale(1, -1); k.globalAlpha = 0.18; k.fillStyle = '#b8681f'; k.fill(b.path); k.restore();
+    var gl = k.createLinearGradient(b.L, 0, b.L + b.w, 0); gl.addColorStop(0, '#1b0b05'); gl.addColorStop(0.18, '#c97a2c'); gl.addColorStop(0.32, '#5a2a0e'); gl.addColorStop(0.75, '#2a1207'); gl.addColorStop(0.92, '#e09a4a'); gl.addColorStop(1, '#2a1207');
+    k.fillStyle = gl; k.fill(b.path);
+    k.save(); k.clip(b.path);
+    k.fillStyle = 'rgba(255,230,190,.55)'; k.fillRect(b.L + b.w * 0.16, geo.top, b.w * 0.05, geo.h);
+    k.fillStyle = '#efe2c8'; k.fillRect(b.L + b.w * 0.08, b.labelY, b.w * 0.84, b.labelH);
+    k.fillStyle = '#7a4a1c'; k.fillRect(b.L + b.w * 0.08, b.labelY + b.labelH * 0.08, b.w * 0.84, b.labelH * 0.02);
+    k.fillStyle = '#2a1207'; k.textAlign = 'center';
+    k.font = '600 ' + Math.round(b.w * 0.1) + 'px Georgia, serif'; k.fillText('Highland', x, b.labelY + b.labelH * 0.38);
+    k.fillText('Ember', x, b.labelY + b.labelH * 0.58);
+    k.font = '600 ' + Math.round(b.w * 0.055) + 'px Inter, sans-serif'; k.fillStyle = '#7a4a1c'; k.fillText('12 YEAR SINGLE MALT', x, b.labelY + b.labelH * 0.82);
+    k.restore();
+    k.fillStyle = 'rgba(244,239,232,.85)'; k.font = '600 ' + Math.round(12 * DPR) + 'px Inter, sans-serif'; k.textAlign = 'left';
+    k.fillText('AFTER · AI 出图', x + geo.w * 0.9, geo.top + geo.h * 0.2);
+    grain(k, w, h, 0.04);
+  }
+
+  function resize() {
+    W = innerWidth; H = innerHeight; DPR = Math.min(2, window.devicePixelRatio || 1);
+    [c, base, after, mask].forEach(function (cv) { cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); });
+    var phone = W < 760, bh = Math.min(H * (phone ? 0.5 : 0.78), W * (phone ? 1.1 : 0.62));
+    geo = { x: W * (phone ? 0.62 : 0.6) * DPR, h: bh * DPR, w: bh * 0.33 * DPR };
+    geo.floor = H * DPR * (phone ? 0.92 : 0.9); geo.top = geo.floor - geo.h;
+    drawBase(base.getContext('2d')); drawAfter(after.getContext('2d'));
+  }
+
+  var mx = -1, my = -1, cx = W / 2, cy = H / 2, rad = 0, idle = 0, touched = false;
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  addEventListener('pointermove', function (e) { mx = e.clientX; my = e.clientY; touched = true; document.getElementById('hint').style.opacity = 0; });
+  function frame(t) {
+    var target = 1;
+    if (!touched) { mx = W * 0.6 + Math.cos(t / 1400) * W * 0.12; my = H * 0.55 + Math.sin(t / 1100) * H * 0.18; target = 0.85; }
+    var k = reduce ? 1 : 0.14;
+    cx += (mx - cx) * k; cy += (my - cy) * k;
+    rad += ((Math.min(W, H) * 0.2 * target) - rad) * 0.08;
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.drawImage(base, 0, 0);
+    var m = mask.getContext('2d');
+    m.globalCompositeOperation = 'source-over'; m.clearRect(0, 0, mask.width, mask.height);
+    m.drawImage(after, 0, 0);
+    m.globalCompositeOperation = 'destination-in';
+    var X = cx * DPR, Y = cy * DPR, R = rad * DPR;
+    var rg = m.createRadialGradient(X, Y, R * 0.55, X, Y, R);
+    rg.addColorStop(0, 'rgba(0,0,0,1)'); rg.addColorStop(1, 'rgba(0,0,0,0)');
+    m.fillStyle = rg; m.fillRect(0, 0, mask.width, mask.height);
+    g.drawImage(mask, 0, 0);
+    g.strokeStyle = 'rgba(124,195,227,.9)'; g.lineWidth = 2 * DPR; g.beginPath(); g.arc(X, Y, R * 0.78, Math.PI * 0.6, Math.PI * 1.4); g.stroke();
+    requestAnimationFrame(frame);
+  }
+  resize();
+  cx = W * 0.6; cy = H * 0.55;
+  addEventListener('resize', resize);
+  if (document.fonts && document.fonts.load) document.fonts.load('600 20px Inter').then(function () { resize(); });
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

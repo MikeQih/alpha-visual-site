@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Alpha Visual Process</title>
+<meta name="description" content="How Alpha Visual turns a product brief into films, visuals and sites, in four steps and three to seven days.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Space+Grotesk:wght@400;500&family=Noto+Sans+SC:wght@400&display=swap">
+<style>
+/* Layout: a long scroll over a fixed night sky with magenta nebula and mountain ridges drawn in code (parallax). Neon hero object, then facts, then the four-step process and a closing call. Single dark look by design. */
+:root{
+  color-scheme: dark;
+  --bg:#07060c;
+  --text:#f4eef6;
+  --mute:rgba(244,238,246,.62);
+  --faint:rgba(244,238,246,.14);
+  --neon:#ff3d8b;
+  --card:rgba(16,10,22,.55);
+  --mono:"Space Mono","Noto Sans SC",ui-monospace,monospace;
+  --grot:"Space Grotesk","Noto Sans SC",system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--grot);-webkit-font-smoothing:antialiased}
+button,a{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text-decoration:none}
+#sky{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:0}
+.top{position:fixed;left:0;right:0;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:calc(16px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));font-family:var(--mono)}
+.top .l{display:flex;gap:8px}
+.chip{display:flex;align-items:center;gap:8px;height:44px;padding:0 14px;border-radius:10px;background:rgba(30,26,36,.8);font-size:14px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.chip.sq{width:44px;padding:0;justify-content:center}
+.book{height:44px;padding:0 18px;border-radius:999px;background:var(--text);color:#07060c;font-size:14px;font-weight:700}
+main{position:relative;z-index:1}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+.hero{position:relative;height:100vh;min-height:620px;overflow:hidden;background:linear-gradient(180deg,#07060c 0%,rgba(7,6,12,.92) 70%,rgba(7,6,12,0) 100%)}
+.ghost{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);font-family:var(--mono);font-weight:700;font-size:clamp(90px,19vw,330px);letter-spacing:-.04em;color:rgba(244,238,246,.05);white-space:nowrap;pointer-events:none}
+#neon{position:absolute;inset:0;width:100%;height:100%}
+.h-left{position:absolute;left:max(16px,env(safe-area-inset-left,0px));bottom:7vh;max-width:420px}
+.h-left h1{font-family:var(--mono);font-weight:400;font-size:clamp(44px,5.6vw,92px);line-height:1;letter-spacing:-.03em}
+.h-left p{margin-top:18px;font-family:var(--mono);font-size:13px;line-height:1.6;color:var(--mute)}
+.h-right{position:absolute;right:max(16px,env(safe-area-inset-right,0px));bottom:7vh;text-align:right;font-family:var(--mono);font-size:clamp(44px,5.6vw,92px);line-height:1;letter-spacing:-.03em}
+
+.scene{height:90vh;display:grid;place-items:center;text-align:center}
+.scene p{max-width:46ch;font-family:var(--mono);font-size:14px;line-height:1.7;color:rgba(244,238,246,.82);padding:18px 22px;border-radius:12px;background:rgba(7,6,12,.35);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+
+.facts{padding-block:16vh 12vh;text-align:center}
+.facts .k{font-family:var(--mono);font-size:12px;letter-spacing:.24em;color:var(--mute)}
+.facts .row{display:flex;justify-content:center;flex-wrap:wrap;gap:clamp(28px,7vw,120px);margin-top:28px}
+.facts b{display:block;font-family:var(--mono);font-weight:400;font-size:clamp(46px,6vw,100px);letter-spacing:-.04em;line-height:1}
+.facts span{display:block;margin-top:8px;font-family:var(--mono);font-size:13px;color:var(--mute)}
+
+.adapt{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:32px;align-items:end;padding-block:10vh 6vh}
+.adapt h2{font-family:var(--mono);font-weight:400;font-size:clamp(44px,6vw,104px);line-height:1;letter-spacing:-.03em}
+.adapt p{max-width:40ch;justify-self:end;font-family:var(--mono);font-size:13.5px;line-height:1.7;color:var(--mute)}
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;padding-bottom:16vh}
+.step{display:flex;flex-direction:column;gap:14px;min-height:240px;padding:22px;border-radius:14px;background:var(--card);border:1px solid var(--faint);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.step .d{font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:var(--neon)}
+.step h3{font-family:var(--mono);font-weight:400;font-size:26px;letter-spacing:-.02em}
+.step p{font-size:14.5px;line-height:1.6;color:var(--mute)}
+
+.end{padding-block:14vh 10vh;text-align:center}
+.end h2{font-family:var(--mono);font-weight:400;font-size:clamp(36px,5vw,80px);letter-spacing:-.03em;line-height:1.05;text-wrap:balance}
+.end .book{margin-top:32px;height:52px;padding:0 26px;font-size:15px}
+footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;padding-block:22px calc(26px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--faint);font-family:var(--mono);font-size:12px;color:var(--mute)}
+
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,10px);z-index:9;max-width:calc(100vw - 32px);padding:10px 16px;border-radius:999px;background:var(--text);color:#07060c;font-size:13px;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+button:focus-visible,a:focus-visible{outline:2px solid var(--neon);outline-offset:3px}
+@media (max-width:900px){ .steps{grid-template-columns:repeat(2,minmax(0,1fr))} .adapt{grid-template-columns:1fr} .adapt p{justify-self:start} }
+@media (max-width:560px){ .steps{grid-template-columns:1fr} .h-right{display:none} .ghost{top:30%} }
+</style>
+</head>
+<body>
+<canvas id="sky" aria-hidden="true"></canvas>
+<header class="top">
+  <div class="l">
+    <a class="chip" href="/" aria-label="Alpha Visual, all work"><svg width="15" height="14" viewBox="0 0 24 22" aria-hidden="true"><path d="M12 0 24 22H17L12 12.4 7 22H0z" fill="currentColor"/></svg>Alpha Visual</a>
+    <a class="chip sq" href="/" aria-label="All work"><svg width="16" height="12" viewBox="0 0 16 12" aria-hidden="true"><path d="M0 1h16M0 6h16M0 11h16" stroke="currentColor" stroke-width="1.6"/></svg></a>
+  </div>
+  <button type="button" class="book" data-contact>Book a call</button>
+</header>
+
+<main>
+  <section class="hero wrap">
+    <div class="ghost" aria-hidden="true">VISUALS</div>
+    <canvas id="neon" aria-hidden="true"></canvas>
+    <div class="h-left">
+      <h1>Idea<br>To Image</h1>
+      <p>We turn a product brief into films, visuals and sites. Alpha Visual runs the whole chain, from the first idea to the launch post.</p>
+    </div>
+    <div class="h-right" aria-hidden="true">One<br>Studio</div>
+  </section>
+
+  <section class="scene wrap">
+    <p>Every launch starts the same way: a product, a deadline and a place it has to be seen. 每一次上线，都从一件产品、一个期限和一个要被看见的地方开始。</p>
+  </section>
+
+  <section class="facts wrap">
+    <div class="k">WHAT TO EXPECT</div>
+    <div class="row">
+      <div><b>3–7</b><span>Days to deliver</span></div>
+      <div><b>5</b><span>Service packages</span></div>
+      <div><b>2</b><span>Languages · EN 中文</span></div>
+    </div>
+  </section>
+
+  <section class="adapt wrap">
+    <h2>How a Launch<br>Gets Made</h2>
+    <p>Every project runs the same four steps, so you always know what comes next and when it lands.</p>
+  </section>
+  <section class="steps wrap">
+    <article class="step"><span class="d">DAY 1</span><h3>Brief</h3><p>One call and a short form: the product, who it is for, and where the visuals will run.</p></article>
+    <article class="step"><span class="d">DAY 1–2</span><h3>Concept</h3><p>Two or three directions as stills, so you choose a look before anything moves.</p></article>
+    <article class="step"><span class="d">DAY 2–5</span><h3>Production</h3><p>Films, visuals or pages made with AI and finished by hand, in English and Chinese.</p></article>
+    <article class="step"><span class="d">DAY 5–7</span><h3>Launch</h3><p>Final files in every size you need, plus one round of changes after you see them live.</p></article>
+  </section>
+
+  <section class="end wrap">
+    <h2>Ready when your product is.</h2>
+    <button type="button" class="book" data-contact>Book a call</button>
+  </section>
+  <footer class="wrap"><span>© 2026 Alpha Visual · Singapore</span><span>Night sky and object are placeholders drawn in code.</span></footer>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  var toastEl = document.getElementById('toast'), tt;
+  document.querySelectorAll('[data-contact]').forEach(function (b) { b.addEventListener('click', function () { toastEl.textContent = '联系方式待补充：WhatsApp · 微信 · Email'; toastEl.classList.add('show'); clearTimeout(tt); tt = setTimeout(function () { toastEl.classList.remove('show'); }, 2400); }); });
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* fixed sky: stars, magenta nebula, three ridges that drift at different speeds as you scroll */
+  var sky = document.getElementById('sky'), s = sky.getContext('2d'), W, H, DPR, stars = [], ridges = [];
+  function seeded(n) { return function () { n = (n * 16807) % 2147483647; return (n - 1) / 2147483646; }; }
+  function ridge(r, rough, base, amp) {
+    var pts = [0, 0], step = 1;
+    for (var lv = 0; lv < 8; lv++) {
+      var next = []; for (var i = 0; i < pts.length - 1; i++) { next.push(pts[i]); next.push((pts[i] + pts[i + 1]) / 2 + (r() - 0.5) * step); } next.push(pts[pts.length - 1]); pts = next; step *= rough;
+    }
+    return { pts: pts, base: base, amp: amp };
+  }
+  function buildSky() {
+    var r = seeded(42); stars = [];
+    for (var i = 0; i < 420; i++) stars.push([r(), r() * 0.75, r() * 1.3 + 0.2, r()]);
+    ridges = [ridge(seeded(7), 0.55, 0.62, 0.32), ridge(seeded(19), 0.52, 0.72, 0.26), ridge(seeded(31), 0.5, 0.84, 0.2)];
+  }
+  function paintSky() {
+    var y = window.scrollY || 0;
+    s.setTransform(DPR, 0, 0, DPR, 0, 0);
+    var gr = s.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#07060c'); gr.addColorStop(0.45, '#2a0b2c'); gr.addColorStop(0.8, '#9c1e5c'); gr.addColorStop(1, '#2a0b2c');
+    s.fillStyle = gr; s.fillRect(0, 0, W, H);
+    [[0.62, 0.32, 0.5, 'rgba(255,61,139,.35)'], [0.4, 0.22, 0.35, 'rgba(160,60,255,.22)'], [0.75, 0.5, 0.4, 'rgba(255,120,160,.2)']].forEach(function (n) {
+      var cx = W * n[0], cy = H * n[1] - y * 0.05, rr = Math.max(W, H) * n[2]; var ng = s.createRadialGradient(cx, cy, 0, cx, cy, rr); ng.addColorStop(0, n[3]); ng.addColorStop(1, 'rgba(0,0,0,0)'); s.fillStyle = ng; s.fillRect(0, 0, W, H);
+    });
+    s.fillStyle = '#fff';
+    stars.forEach(function (st) { s.globalAlpha = 0.35 + st[3] * 0.6; s.beginPath(); s.arc(st[0] * W, ((st[1] * H - y * 0.04) % H + H) % H, st[2], 0, 7); s.fill(); });
+    s.globalAlpha = 1;
+    var cols = ['#3a1838', '#241028', '#120a18'], speeds = [0.06, 0.1, 0.16];
+    ridges.forEach(function (rg, k) {
+      var off = Math.max(0, 0.35 - y / (H * 3)) * H * (k + 1) * 0.25 - y * speeds[k] * 0.4;
+      s.beginPath(); s.moveTo(0, H);
+      for (var i = 0; i < rg.pts.length; i++) { var px = i / (rg.pts.length - 1) * W, py = H * rg.base - rg.pts[i] * H * rg.amp * 1.6 + off; s.lineTo(px, py); }
+      s.lineTo(W, H); s.closePath();
+      var rgd = s.createLinearGradient(0, H * (rg.base - rg.amp), 0, H); rgd.addColorStop(0, cols[k]); rgd.addColorStop(1, '#07060c'); s.fillStyle = rgd; s.fill();
+    });
+  }
+
+  /* neon hero object: a bottle outline that glows and breathes */
+  var neon = document.getElementById('neon'), n = neon.getContext('2d'), nw, nh;
+  function bottlePath(x, top, w, h) {
+    var p = new Path2D(), cw = w * 0.27, ch = h * 0.3, sh = h * 0.1, L = x - w / 2, R = x + w / 2, b = top + h, r = w * 0.1;
+    p.moveTo(x - cw / 2, top); p.lineTo(x - cw / 2, top + ch);
+    p.bezierCurveTo(x - cw / 2, top + ch + sh * 0.5, L, top + ch + sh * 0.4, L, top + ch + sh);
+    p.lineTo(L, b - r); p.quadraticCurveTo(L, b, L + r, b); p.lineTo(R - r, b); p.quadraticCurveTo(R, b, R, b - r);
+    p.lineTo(R, top + ch + sh); p.bezierCurveTo(R, top + ch + sh * 0.4, x + cw / 2, top + ch + sh * 0.5, x + cw / 2, top + ch);
+    p.lineTo(x + cw / 2, top); p.closePath(); return p;
+  }
+  function paintNeon(t) {
+    n.setTransform(DPR, 0, 0, DPR, 0, 0); n.clearRect(0, 0, nw, nh);
+    var h = Math.min(nh * 0.62, nw * 0.9), w = h * 0.34, x = nw / 2, top = nh * 0.16;
+    var pulse = reduce ? 1 : 0.85 + 0.15 * Math.sin(t / 700);
+    var halo = n.createRadialGradient(x, top + h * 0.55, 0, x, top + h * 0.55, h * 0.8); halo.addColorStop(0, 'rgba(255,61,139,' + (0.32 * pulse) + ')'); halo.addColorStop(1, 'rgba(255,61,139,0)');
+    n.fillStyle = halo; n.fillRect(0, 0, nw, nh);
+    var p = bottlePath(x, top, w, h);
+    n.fillStyle = 'rgba(20,6,18,.9)'; n.fill(p);
+    n.save(); n.shadowColor = '#ff3d8b'; n.shadowBlur = 28 * pulse; n.strokeStyle = '#ff7ab0'; n.lineWidth = 3; n.stroke(p); n.shadowBlur = 8; n.strokeStyle = '#ffe1ee'; n.lineWidth = 1.2; n.stroke(p); n.restore();
+    n.save(); n.clip(p); n.fillStyle = 'rgba(255,122,176,.16)'; n.fillRect(x - w * 0.32, top, w * 0.07, h); n.restore();
+    n.strokeStyle = 'rgba(255,122,176,.6)'; n.lineWidth = 1; n.strokeRect(x - w * 0.38, top + h * 0.56, w * 0.76, h * 0.2);
+  }
+  function resize() {
+    W = innerWidth; H = innerHeight; DPR = Math.min(2, window.devicePixelRatio || 1);
+    sky.width = Math.round(W * DPR); sky.height = Math.round(H * DPR);
+    var hero = neon.parentElement; nw = hero.clientWidth; nh = hero.clientHeight;
+    neon.width = Math.round(nw * DPR); neon.height = Math.round(nh * DPR);
+    paintSky(); paintNeon(performance.now());
+  }
+  var ticking = false;
+  addEventListener('scroll', function () { if (ticking) return; ticking = true; requestAnimationFrame(function () { paintSky(); ticking = false; }); }, { passive: true });
+  addEventListener('resize', resize);
+  buildSky(); resize();
+  (function loop(t) { if (window.scrollY < innerHeight) paintNeon(t); if (!reduce) requestAnimationFrame(loop); })(performance.now());
+})();
+</script>
+</body>
+</html>
