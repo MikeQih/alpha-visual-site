@@ -36,7 +36,15 @@ main{position:relative;z-index:1}
 
 .hero{position:relative;height:100vh;min-height:620px;overflow:hidden;background:linear-gradient(180deg,#07060c 0%,rgba(7,6,12,.92) 70%,rgba(7,6,12,0) 100%)}
 .ghost{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);font-family:var(--mono);font-weight:700;font-size:clamp(90px,19vw,330px);letter-spacing:-.04em;color:rgba(244,238,246,.05);white-space:nowrap;pointer-events:none}
-#neon{position:absolute;inset:0;width:100%;height:100%}
+#neon{position:absolute;inset:0;width:100%;height:100%;touch-action:pan-y}
+.hero::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 34% 46% at 50% 50%,rgba(255,61,139,.26),rgba(255,61,139,0) 70%);pointer-events:none}
+#spin{position:absolute;left:50%;top:12%;height:72%;max-width:100%;transform:translateX(-50%);object-fit:contain;display:none}
+.turn{position:absolute;left:50%;bottom:7vh;transform:translateX(-50%);display:flex;align-items:center;gap:14px;font-family:var(--mono);font-size:12px;letter-spacing:.2em;color:var(--mute);white-space:nowrap;pointer-events:none}
+.turn i{display:block;width:44px;height:1px;background:var(--faint);position:relative}
+.turn i::after{content:"";position:absolute;top:-3px;width:7px;height:7px;border-top:1px solid var(--mute);border-left:1px solid var(--mute)}
+.turn i.l::after{left:0;transform:rotate(-45deg)}
+.turn i.r::after{right:0;transform:rotate(135deg)}
+.turn b{font-weight:400;color:var(--neon);min-width:4.5ch;text-align:left}
 .h-left{position:absolute;left:max(16px,env(safe-area-inset-left,0px));bottom:7vh;max-width:420px}
 .h-left h1{font-family:var(--mono);font-weight:400;font-size:clamp(44px,5.6vw,92px);line-height:1;letter-spacing:-.03em}
 .h-left p{margin-top:18px;font-family:var(--mono);font-size:13px;line-height:1.6;color:var(--mute)}
@@ -69,7 +77,7 @@ footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;paddin
 .toast.show{opacity:1;transform:translate(-50%,0)}
 button:focus-visible,a:focus-visible{outline:2px solid var(--neon);outline-offset:3px}
 @media (max-width:900px){ .steps{grid-template-columns:repeat(2,minmax(0,1fr))} .adapt{grid-template-columns:1fr} .adapt p{justify-self:start} }
-@media (max-width:560px){ .steps{grid-template-columns:1fr} .h-right{display:none} .ghost{top:30%} }
+@media (max-width:560px){ .steps{grid-template-columns:1fr} .h-right{display:none} .ghost{top:30%} .turn{bottom:auto;top:calc(78px + env(safe-area-inset-top,0px))} }
 </style>
 </head>
 <body>
@@ -86,6 +94,9 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--neon);outline-offse
   <section class="hero wrap">
     <div class="ghost" aria-hidden="true">VISUALS</div>
     <canvas id="neon" aria-hidden="true"></canvas>
+    <!-- For a real 360° turntable, set src on this video (a short all-keyframe clip of one full turn); the cursor then scrubs it and the 3D placeholder hides. -->
+    <video id="spin" muted playsinline preload="auto" aria-hidden="true"></video>
+    <div class="turn" aria-hidden="true"><i class="l"></i><span id="turnLbl">MOVE TO TURN</span><i class="r"></i><b id="deg">000°</b></div>
     <div class="h-left">
       <h1>Idea<br>To Image</h1>
       <p>We turn a product brief into films, visuals and sites. Alpha Visual runs the whole chain, from the first idea to the launch post.</p>
@@ -121,7 +132,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--neon);outline-offse
     <h2>Ready when your product is.</h2>
     <button type="button" class="book" data-contact>Book a call</button>
   </section>
-  <footer class="wrap"><span>© 2026 Alpha Visual · Singapore</span><span>Night sky and object are placeholders drawn in code.</span></footer>
+  <footer class="wrap"><span>© 2026 Alpha Visual · Singapore</span><span>Night sky and bottle are placeholders drawn in code.</span></footer>
 </main>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -167,40 +178,157 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--neon);outline-offse
     });
   }
 
-  /* neon hero object: a bottle outline that glows and breathes */
-  var neon = document.getElementById('neon'), n = neon.getContext('2d'), nw, nh;
-  function bottlePath(x, top, w, h) {
-    var p = new Path2D(), cw = w * 0.27, ch = h * 0.3, sh = h * 0.1, L = x - w / 2, R = x + w / 2, b = top + h, r = w * 0.1;
-    p.moveTo(x - cw / 2, top); p.lineTo(x - cw / 2, top + ch);
-    p.bezierCurveTo(x - cw / 2, top + ch + sh * 0.5, L, top + ch + sh * 0.4, L, top + ch + sh);
-    p.lineTo(L, b - r); p.quadraticCurveTo(L, b, L + r, b); p.lineTo(R - r, b); p.quadraticCurveTo(R, b, R, b - r);
-    p.lineTo(R, top + ch + sh); p.bezierCurveTo(R, top + ch + sh * 0.4, x + cw / 2, top + ch + sh * 0.5, x + cw / 2, top + ch);
-    p.lineTo(x + cw / 2, top); p.closePath(); return p;
-  }
-  function paintNeon(t) {
-    n.setTransform(DPR, 0, 0, DPR, 0, 0); n.clearRect(0, 0, nw, nh);
-    var h = Math.min(nh * 0.62, nw * 0.9), w = h * 0.34, x = nw / 2, top = nh * 0.16;
-    var pulse = reduce ? 1 : 0.85 + 0.15 * Math.sin(t / 700);
-    var halo = n.createRadialGradient(x, top + h * 0.55, 0, x, top + h * 0.55, h * 0.8); halo.addColorStop(0, 'rgba(255,61,139,' + (0.32 * pulse) + ')'); halo.addColorStop(1, 'rgba(255,61,139,0)');
-    n.fillStyle = halo; n.fillRect(0, 0, nw, nh);
-    var p = bottlePath(x, top, w, h);
-    n.fillStyle = 'rgba(20,6,18,.9)'; n.fill(p);
-    n.save(); n.shadowColor = '#ff3d8b'; n.shadowBlur = 28 * pulse; n.strokeStyle = '#ff7ab0'; n.lineWidth = 3; n.stroke(p); n.shadowBlur = 8; n.strokeStyle = '#ffe1ee'; n.lineWidth = 1.2; n.stroke(p); n.restore();
-    n.save(); n.clip(p); n.fillStyle = 'rgba(255,122,176,.16)'; n.fillRect(x - w * 0.32, top, w * 0.07, h); n.restore();
-    n.strokeStyle = 'rgba(255,122,176,.6)'; n.lineWidth = 1; n.strokeRect(x - w * 0.38, top + h * 0.56, w * 0.76, h * 0.2);
-  }
   function resize() {
     W = innerWidth; H = innerHeight; DPR = Math.min(2, window.devicePixelRatio || 1);
     sky.width = Math.round(W * DPR); sky.height = Math.round(H * DPR);
-    var hero = neon.parentElement; nw = hero.clientWidth; nh = hero.clientHeight;
-    neon.width = Math.round(nw * DPR); neon.height = Math.round(nh * DPR);
-    paintSky(); paintNeon(performance.now());
+    paintSky(); if (window.__spin) window.__spin.resize();
   }
   var ticking = false;
   addEventListener('scroll', function () { if (ticking) return; ticking = true; requestAnimationFrame(function () { paintSky(); ticking = false; }); }, { passive: true });
   addEventListener('resize', resize);
   buildSky(); resize();
-  (function loop(t) { if (window.scrollY < innerHeight) paintNeon(t); if (!reduce) requestAnimationFrame(loop); })(performance.now());
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
+<script>
+/* 360° product turntable: the bottle follows the cursor left and right (drag on touch). */
+(function () {
+  var hero = document.querySelector('.hero'), canvas = document.getElementById('neon'), video = document.getElementById('spin');
+  var degEl = document.getElementById('deg'), lbl = document.getElementById('turnLbl');
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var touchOnly = window.matchMedia && matchMedia('(hover: none)').matches;
+  if (touchOnly) lbl.textContent = 'DRAG TO TURN';
+  function showDeg(rad) { var d = Math.round(((rad * 180 / Math.PI) % 360 + 360) % 360) % 360; degEl.textContent = ('00' + d).slice(-3) + '°'; }
+
+  var target = 0, rot = 0, tiltT = 0, tilt = 0, moved = false, drag = null;
+  function fromX(clientX) { var r = hero.getBoundingClientRect(); return Math.min(1, Math.max(0, (clientX - r.left) / r.width)); }
+  addEventListener('pointermove', function (e) {
+    if (e.pointerType === 'mouse') {
+      if (window.scrollY > innerHeight) return;
+      target = (fromX(e.clientX) - 0.5) * 2 * Math.PI; tiltT = (e.clientY / innerHeight - 0.5) * 0.22; moved = true;
+    } else if (drag) { target = drag.t + (e.clientX - drag.x) / hero.clientWidth * 2 * Math.PI; moved = true; }
+  }, { passive: true });
+  hero.addEventListener('pointerdown', function (e) { if (e.pointerType !== 'mouse') drag = { x: e.clientX, t: target }; });
+  addEventListener('pointerup', function () { drag = null; });
+  addEventListener('pointercancel', function () { drag = null; });
+
+  /* real turntable film, when provided */
+  if (video.getAttribute('src')) {
+    canvas.style.display = 'none'; video.style.display = 'block';
+    (function scrub() { rot += (target - rot) * 0.12; var p = ((rot / (2 * Math.PI)) % 1 + 1) % 1; if (video.duration) video.currentTime = p * video.duration * 0.999; showDeg(rot); requestAnimationFrame(scrub); })();
+    return;
+  }
+  if (!window.THREE) { document.querySelector('.turn').style.display = 'none'; return; }
+
+  var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  var scene = new THREE.Scene();
+  var cam = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
+  cam.position.set(0, 0.55, 9.6); cam.lookAt(0, 0.05, 0);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.38));
+  var key = new THREE.DirectionalLight(0xfff1f6, 0.95); key.position.set(2.6, 3, 5); scene.add(key);
+  var rimL = new THREE.PointLight(0xff3d8b, 2.4, 14); rimL.position.set(-3.2, 1.2, -1.6); scene.add(rimL);
+  var rimR = new THREE.PointLight(0x9b5cff, 1.4, 14); rimR.position.set(3.2, -0.6, -1.8); scene.add(rimR);
+
+  var bottle = new THREE.Group(); bottle.position.y = 0.1; scene.add(bottle);
+  var R = 0.56;
+  var prof = [[0,-1.5],[0.47,-1.5],[0.53,-1.48],[R,-1.42],[R,0.3],[0.545,0.42],[0.5,0.55],[0.4,0.68],[0.27,0.8],[0.2,0.9],[0.175,1.0],[0.17,1.36],[0.185,1.39],[0.185,1.46],[0.165,1.48],[0,1.48]]
+    .map(function (p) { return new THREE.Vector2(p[0], p[1]); });
+  var glassGeo = new THREE.LatheGeometry(prof, 120);
+  var neon = new THREE.Color(0xff3d8b);
+  var uni = { neon: { value: neon }, pulse: { value: 1 } };
+  var vsh = 'varying vec3 vN; varying vec3 vV; varying float vY; void main(){ vec4 mv = modelViewMatrix*vec4(position,1.); vN = normalize(normalMatrix*normal); vV = normalize(-mv.xyz); vY = position.y; gl_Position = projectionMatrix*mv; }';
+  var fsh = [
+    'uniform vec3 neon; uniform float pulse; varying vec3 vN; varying vec3 vV; varying float vY;',
+    'void main(){ vec3 n = normalize(vN); if(!gl_FrontFacing) n = -n; vec3 v = normalize(vV);',
+    ' float f = pow(1. - abs(dot(n, v)), 2.3);',
+    ' vec3 L = normalize(vec3(.6,.55,1.)); float spec = pow(max(dot(reflect(-L, n), v), 0.), 70.);',
+    ' float streak = smoothstep(.12, .0, abs(n.x + .6)) * smoothstep(-1.45, -1.1, vY) * (1. - smoothstep(.35, .6, vY));',
+    ' float streak2 = smoothstep(.06, .0, abs(n.x - .8)) * .6;',
+    ' vec3 col = vec3(.10,.025,.075) + neon * f * 1.7 * pulse + vec3(1.,.92,.96) * (spec * .9 + (streak + streak2) * .5);',
+    ' float a = clamp(.22 + f * .75 + streak * .4 + streak2 * .3 + spec, 0., 1.);',
+    ' gl_FragColor = vec4(col, a); }'].join('\n');
+  function glass(side, order) {
+    var m = new THREE.Mesh(glassGeo, new THREE.ShaderMaterial({ uniforms: uni, vertexShader: vsh, fragmentShader: fsh, transparent: true, depthWrite: false, side: side }));
+    m.renderOrder = order; bottle.add(m);
+  }
+  /* liquid inside */
+  var liq = new THREE.LatheGeometry([[0,-1.44],[0.5,-1.44],[0.525,-1.4],[0.525,0.22],[0,0.22]].map(function (p) { return new THREE.Vector2(p[0], p[1]); }), 96);
+  var liquid = new THREE.Mesh(liq, new THREE.MeshStandardMaterial({ color: 0x6e2c0c, emissive: 0x1c0703, roughness: 0.22, metalness: 0.15 }));
+  liquid.renderOrder = 0; bottle.add(liquid);
+  glass(THREE.BackSide, 1);
+
+  /* labels drawn on canvas */
+  function labelTex(w, h, draw) { var c = document.createElement('canvas'); c.width = w; c.height = h; var t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 8; t.redraw = function () { draw(c.getContext('2d'), w, h); t.needsUpdate = true; }; t.redraw(); return t; }
+  var mono = '"Space Mono", ui-monospace, monospace';
+  var front = labelTex(800, 800, function (g, w, h) {
+    g.fillStyle = '#f0e8d9'; g.fillRect(0, 0, w, h);
+    var gr = g.createLinearGradient(0, 0, w, 0); gr.addColorStop(0, 'rgba(0,0,0,.22)'); gr.addColorStop(.5, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,.22)'); g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    g.strokeStyle = '#2a0d1c'; g.lineWidth = 3; g.strokeRect(34, 34, w - 68, h - 68); g.lineWidth = 1; g.strokeRect(46, 46, w - 92, h - 92);
+    g.fillStyle = '#2a0d1c'; g.textAlign = 'center';
+    g.font = '28px ' + mono; g.fillText('A L P H A   V I S U A L', w / 2, 118);
+    g.save(); g.translate(w / 2, 250); g.scale(4.2, 4.2); g.fillStyle = '#c2185b'; g.beginPath(); g.moveTo(0, -11); g.lineTo(12, 11); g.lineTo(5, 11); g.lineTo(0, 1.4); g.lineTo(-5, 11); g.lineTo(-12, 11); g.closePath(); g.fill(); g.restore();
+    g.fillStyle = '#2a0d1c'; g.font = 'italic 128px Georgia, "Times New Roman", serif'; g.fillText('No. 01', w / 2, 470);
+    g.fillRect(w / 2 - 150, 515, 300, 2);
+    g.font = '34px ' + mono; g.fillText('STUDIO RESERVE', w / 2, 580);
+    g.font = '22px ' + mono; g.fillStyle = 'rgba(42,13,28,.7)'; g.fillText('SINGAPORE · EST. 2026', w / 2, 650); g.fillText('70cl · 43% vol', w / 2, 690);
+  });
+  var back = labelTex(640, 560, function (g, w, h) {
+    g.fillStyle = '#f0e8d9'; g.fillRect(0, 0, w, h);
+    g.strokeStyle = '#2a0d1c'; g.lineWidth = 2; g.strokeRect(26, 26, w - 52, h - 52);
+    g.fillStyle = '#2a0d1c'; g.textAlign = 'left'; g.font = '26px ' + mono;
+    ['You turned it around.', '', 'A 360° product view,', 'made for your launch', 'page, ads and posts.', '', '产品 360° 展示'].forEach(function (l, i) { g.fillText(l, 62, 100 + i * 42); });
+    for (var i = 0, x = 62; x < 330; i++) { var bw = (i * 7919 % 5) + 2; g.fillRect(x, 420, bw, 76); x += bw + ((i * 104729) % 4) + 3; }
+    g.font = '18px ' + mono; g.fillText('8 8 8 0 1 2 6   0 1', 62, 520);
+  });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { front.redraw(); back.redraw(); });
+  function band(tex, h, y, start, len) {
+    var m = new THREE.Mesh(new THREE.CylinderGeometry(R * 1.012, R * 1.012, h, 72, 1, true, start, len), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.78, metalness: 0 }));
+    m.position.y = y; m.renderOrder = 2; bottle.add(m);
+  }
+  band(front, 0.95, -0.52, -0.85, 1.7);
+  band(back, 0.62, -0.62, Math.PI - 0.6, 1.2);
+  glass(THREE.FrontSide, 3);
+  /* closure and neck band */
+  var cap = new THREE.Mesh(new THREE.CylinderGeometry(0.192, 0.196, 0.36, 56), new THREE.MeshStandardMaterial({ color: 0x2e0c1e, metalness: 0.65, roughness: 0.32, emissive: 0x12030a }));
+  cap.position.y = 1.31; bottle.add(cap);
+  var foil = new THREE.Mesh(new THREE.TorusGeometry(0.196, 0.014, 10, 56), new THREE.MeshStandardMaterial({ color: 0xd9b46c, metalness: 0.9, roughness: 0.28 }));
+  foil.rotation.x = Math.PI / 2; foil.position.y = 1.13; bottle.add(foil);
+  var neck = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.09, 56, 1, true), new THREE.MeshStandardMaterial({ color: 0xc2185b, roughness: 0.5, emissive: 0x2a0410 }));
+  neck.position.y = 0.97; bottle.add(neck);
+
+  /* turntable: neon ring, degree ticks that turn with the bottle, and a soft glow */
+  var table = new THREE.Group(); table.position.y = -1.42 + bottle.position.y; scene.add(table);
+  var ring = new THREE.Mesh(new THREE.TorusGeometry(1.02, 0.011, 8, 160), new THREE.MeshBasicMaterial({ color: 0xff3d8b }));
+  ring.rotation.x = Math.PI / 2; table.add(ring);
+  var ticks = new THREE.Group(); table.add(ticks);
+  for (var i = 0; i < 72; i++) {
+    var long = i % 6 === 0, a = i / 72 * Math.PI * 2;
+    var t = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.003, long ? 0.12 : 0.05), new THREE.MeshBasicMaterial({ color: long ? 0xffb3cf : 0x8a3a5c, transparent: true, opacity: long ? 0.95 : 0.7 }));
+    var rr = long ? 1.14 : 1.115; t.position.set(Math.sin(a) * rr, 0, Math.cos(a) * rr); t.rotation.y = a; ticks.add(t);
+  }
+  var gc = document.createElement('canvas'); gc.width = gc.height = 256; var gg = gc.getContext('2d');
+  var rg = gg.createRadialGradient(128, 128, 0, 128, 128, 128); rg.addColorStop(0, 'rgba(255,61,139,.55)'); rg.addColorStop(.45, 'rgba(255,61,139,.14)'); rg.addColorStop(1, 'rgba(255,61,139,0)'); gg.fillStyle = rg; gg.fillRect(0, 0, 256, 256);
+  var glow = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 3.4), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(gc), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+  glow.rotation.x = -Math.PI / 2; glow.position.y = -0.005; table.add(glow);
+
+  function resize() {
+    var w = hero.clientWidth, h = hero.clientHeight; if (!w || !h) return;
+    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); renderer.setSize(w, h, false);
+    cam.aspect = w / h; cam.fov = w / h < 0.62 ? 38 : 30; cam.updateProjectionMatrix();
+  }
+  window.__spin = { resize: resize };
+  resize();
+  (function loop(now) {
+    requestAnimationFrame(loop);
+    if (window.scrollY > hero.offsetHeight) return;
+    if (!moved && !reduce) target = Math.sin(now * 0.00055) * 0.9;
+    rot += (target - rot) * 0.075; tilt += (tiltT - tilt) * 0.06;
+    bottle.rotation.y = rot; bottle.rotation.x = tilt; ticks.rotation.y = rot;
+    uni.pulse.value = reduce ? 1 : 0.88 + 0.12 * Math.sin(now / 650);
+    showDeg(rot);
+    renderer.render(scene, cam);
+  })(performance.now());
 })();
 </script>
 </body>

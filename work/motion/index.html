@@ -32,10 +32,10 @@ button,a{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text
 .book{justify-self:end;height:42px;padding:0 18px;border-radius:12px;background:var(--text);color:#05070a;font-size:14px;font-weight:500}
 
 .w{position:fixed;z-index:2;font-weight:500;font-size:clamp(76px,13vw,230px);line-height:.86;letter-spacing:-.05em;text-shadow:0 10px 60px rgba(0,0,0,.35);pointer-events:none}
-.w1{left:max(16px,1.5vw);top:16vh}
-.w2{right:max(16px,2vw);top:38vh}
-.w3{left:28vw;top:60vh}
-.lede{position:fixed;z-index:2;left:max(24px,2.4vw);top:calc(16vh + clamp(76px,13vw,230px) * .95);max-width:300px;font-size:14px;line-height:1.5;color:rgba(245,247,250,.82)}
+.w1{left:max(16px,1.5vw);top:13vh}
+.w2{right:max(16px,2vw);top:31vh}
+.w3{left:max(16px,2.4vw);top:63vh}
+.lede{position:fixed;z-index:2;left:max(24px,2.4vw);top:calc(13vh + clamp(76px,13vw,230px) * .95);max-width:300px;font-size:14px;line-height:1.5;color:rgba(245,247,250,.82)}
 .stat{position:fixed;z-index:2;display:flex;flex-direction:column;gap:2px}
 .stat b{font-weight:400;font-size:clamp(28px,3vw,46px);letter-spacing:-.03em;line-height:1}
 .stat span{font-size:12.5px;color:var(--mute)}
@@ -85,55 +85,142 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--text);outline-offse
   var film = document.getElementById('film');
   if (film.getAttribute('src')) { film.style.display = 'block'; document.getElementById('scene').style.display = 'none'; return; }
 
-  /* placeholder film: a night slope, a spray of powder lit from one side, snow drifting through */
+  /* placeholder film: a skier carving S-turns toward a retreating camera, backlit, powder spray at each turn */
   var c = document.getElementById('scene'), g = c.getContext('2d');
-  var W, H, DPR, flakes = [], spray = [];
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var W, H, DPR, f, hy, vx0, A, Z0 = 9, CAMH = 2.4, SPEED = 11, PERIOD = 2.9;
+  var trees = [], sparks = [], track = [], spray = [], clouds = [], flakes = [], ridge = [], grain;
+  var t = 0, us = 0, treeAcc = 0, wasApex = false, sk = { x: 0, sx: 0, sy: 0, lean: 0, flex: 0, s: 0 };
   function rnd(a, b) { return a + Math.random() * (b - a); }
+  function newTree(u) { var side = Math.random() < 0.5 ? -1 : 1; return { x: side * rnd(A + 3.5, A + 22), u: u, h: rnd(5, 12), w: rnd(0.3, 0.42), tiers: 4 + (Math.random() * 3 | 0) }; }
+  function newSpark(u) { return { x: rnd(-30, 30), u: u, p: Math.random() * 6.28 }; }
   function resize() {
     W = innerWidth; H = innerHeight; DPR = Math.min(2, window.devicePixelRatio || 1);
     c.width = Math.round(W * DPR); c.height = Math.round(H * DPR);
-    flakes = []; for (var i = 0; i < Math.round(W * H / 2600); i++) flakes.push({ x: rnd(0, W), y: rnd(0, H), r: rnd(0.4, 2.2), v: rnd(10, 40), d: rnd(-12, 4) });
+    f = 1.5 * H; hy = 0.4 * H; vx0 = W * (W < 760 ? 0.5 : 0.6);
+    A = (W < 760 ? 0.17 : 0.085) * W * Z0 / (f * 0.5);
+    flakes = []; for (var i = 0; i < Math.round(W * H / 3200); i++) flakes.push({ x: rnd(0, W), y: rnd(0, H), r: rnd(0.4, 2.2), v: rnd(14, 46), d: rnd(-14, 4) });
+    var pts = [0, 0], step = 1; for (var lv = 0; lv < 8; lv++) { var nx = []; for (var j = 0; j < pts.length - 1; j++) { nx.push(pts[j]); nx.push((pts[j] + pts[j + 1]) / 2 + (Math.random() - 0.5) * step); } nx.push(pts[pts.length - 1]); pts = nx; step *= 0.55; } ridge = pts;
+    trees = []; sparks = []; var uc = us + Z0;
+    for (var k = 0; k < 90; k++) trees.push(newTree(uc - rnd(2, 90)));
+    for (var m = 0; m < 320; m++) sparks.push(newSpark(uc - rnd(1, 60)));
+    var nc = document.createElement('canvas'); nc.width = nc.height = 160; var ng = nc.getContext('2d'), id = ng.createImageData(160, 160);
+    for (var q = 0; q < id.data.length; q += 4) { var v = Math.random() * 255; id.data[q] = id.data[q + 1] = id.data[q + 2] = v; id.data[q + 3] = 255; }
+    ng.putImageData(id, 0, 0); grain = g.createPattern(nc, 'repeat');
   }
-  function emit(n) {
-    var ex = W * 0.47, ey = H * 0.78;
-    for (var i = 0; i < n; i++) { var a = rnd(-2.75, -1.75), s = rnd(140, 520); spray.push({ x: ex + rnd(-30, 30), y: ey + rnd(-8, 8), vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 0, max: rnd(0.8, 2.2), r: rnd(0.6, 3.2) }); }
+  function step(dt) {
+    t += dt; us += SPEED * dt;
+    var ph = t / PERIOD * Math.PI * 2, sn = Math.sin(ph);
+    sk.x = A * sn; sk.lean = -0.5 * sn; sk.flex = Math.abs(sn);
+    var camX = sk.x * 0.5, uc = us + Z0;
+    sk.sx = vx0 + f * (sk.x - camX) / Z0; sk.sy = hy + f * CAMH / Z0; sk.s = f * 1.8 / Z0;
+    track.push({ x: sk.x, u: us }); while (track.length && us - track[0].u > 75) track.shift();
+    for (var i = trees.length - 1; i >= 0; i--) if (uc - trees[i].u > 95) trees.splice(i, 1);
+    treeAcc += SPEED * dt * 1.0; while (treeAcc > 1) { trees.push(newTree(uc - rnd(1, 3))); treeAcc -= 1; }
+    sparks.forEach(function (p) { if (uc - p.u > 60) { var n = newSpark(uc - rnd(0.5, 2)); p.x = n.x; p.u = n.u; } });
+    /* powder: thrown to the outside of the turn, strongest at the apex */
+    var dir = sn >= 0 ? 1 : -1, power = Math.pow(Math.abs(sn), 2.2), k = H / 812;
+    var feetX = sk.sx + Math.sin(sk.lean) * 0, n = Math.round((10 + 240 * power) * dt * 4);
+    for (var e = 0; e < n; e++) {
+      var sp = rnd(160, 560) * k * (0.4 + power);
+      spray.push({ x: feetX + dir * rnd(0, 22) * k, y: sk.sy + rnd(-4, 8) * k, vx: dir * sp * rnd(0.6, 1.1) + rnd(-40, 40) * k, vy: -rnd(140, 480) * k * (0.4 + power), life: 0, max: rnd(0.6, 1.7), r: rnd(0.7, 3.4) * k });
+    }
+    var apex = Math.abs(sn) > 0.93;
+    if (apex && !wasApex) for (var cl = 0; cl < 7; cl++) clouds.push({ x: feetX + dir * rnd(20, 120) * k, y: sk.sy - rnd(10, 70) * k, vx: dir * rnd(20, 70) * k, vy: -rnd(8, 30) * k, r: rnd(40, 90) * k, life: 0, max: rnd(1.6, 2.8) });
+    wasApex = apex;
+    for (var s = spray.length - 1; s >= 0; s--) { var p = spray[s]; p.life += dt; if (p.life > p.max) { spray.splice(s, 1); continue; } p.vy += 420 * k * dt; p.vx *= 0.975; p.vy *= 0.975; p.x += p.vx * dt; p.y += p.vy * dt - 30 * k * dt; }
+    for (var q = clouds.length - 1; q >= 0; q--) { var o = clouds[q]; o.life += dt; if (o.life > o.max) { clouds.splice(q, 1); continue; } o.x += o.vx * dt; o.y += o.vy * dt; }
+    flakes.forEach(function (fl) { fl.y += fl.v * dt; fl.x += fl.d * dt; if (fl.y > H) { fl.y = -4; fl.x = rnd(0, W); } if (fl.x < -4) fl.x = W + 4; });
   }
-  function slope() {
-    g.beginPath(); g.moveTo(0, H * 0.82);
-    g.bezierCurveTo(W * 0.3, H * 0.74, W * 0.6, H * 0.8, W, H * 0.7);
-    g.lineTo(W, H); g.lineTo(0, H); g.closePath();
+  function proj(x, u, camX, uc) { var d = uc - u; return { d: d, x: vx0 + f * (x - camX) / d, y: hy + f * CAMH / d }; }
+  function drawTree(tr, camX, uc) {
+    var p = proj(tr.x, tr.u, camX, uc); if (p.d < 0.6) return;
+    var h = f * tr.h / p.d, w = h * tr.w; if (p.x < -w || p.x > W + w) return;
+    var fog = Math.min(1, p.d / 85), r = Math.round(10 + 112 * fog), gg = Math.round(14 + 118 * fog), b = Math.round(20 + 128 * fog);
+    g.fillStyle = 'rgb(' + r + ',' + gg + ',' + b + ')';
+    g.fillRect(p.x - w * 0.04, p.y - h * 0.12, w * 0.08, h * 0.12);
+    for (var i = 0; i < tr.tiers; i++) {
+      var y0 = p.y - h * 0.1 - i * h * 0.84 / tr.tiers, ww = w * (1 - i / (tr.tiers + 0.6));
+      g.beginPath(); g.moveTo(p.x - ww / 2, y0); g.lineTo(p.x, y0 - h * 0.34); g.lineTo(p.x + ww / 2, y0); g.closePath(); g.fill();
+    }
+    if (fog < 0.6) { g.fillStyle = 'rgba(205,220,240,' + (0.22 * (1 - fog)).toFixed(3) + ')'; g.fillRect(p.x - w * 0.015, p.y - h, w * 0.03, h * 0.86); }
   }
-  var last = performance.now(), acc = 0;
-  function frame(now) {
-    var dt = Math.min(0.05, (now - last) / 1000); last = now;
+  function rr(x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+  function drawSkier(pass) {
+    var rim = pass === 0, hp = sk.s, grow = rim ? 2.8 / hp : 0;
+    function col(cc) { return rim ? 'rgba(228,238,255,.62)' : cc; }
+    g.save(); g.translate(sk.sx, sk.sy - (rim ? 1.6 : 0)); g.rotate(sk.lean); g.scale(hp, hp);
+    g.lineCap = 'round'; g.lineJoin = 'round';
+    var ext = 1 - 0.13 * sk.flex, hipY = -0.48 * ext, kneeY = -0.25 * ext;
+    [-1, 1].forEach(function (sd) {
+      var fx = sd * 0.1; g.fillStyle = col('#0a0d12');
+      g.beginPath(); g.moveTo(fx - 0.03, -0.012); g.lineTo(fx + 0.03, -0.012); g.lineTo(fx + 0.042, 0.08); g.lineTo(fx - 0.042, 0.08); g.closePath(); g.fill();
+      if (rim) { g.lineWidth = grow; g.strokeStyle = col(); g.stroke(); }
+      g.strokeStyle = col('#151a23'); g.lineWidth = 0.088 + grow;
+      g.beginPath(); g.moveTo(fx, -0.05); g.lineTo(sd * (0.088 - 0.03 * sk.flex), kneeY); g.lineTo(sd * 0.075, hipY); g.stroke();
+      g.fillStyle = col('#0a0d12'); rr(fx - 0.048, -0.09, 0.096, 0.085, 0.02); g.fill(); if (rim) { g.lineWidth = grow; g.stroke(); }
+    });
+    g.translate(0, hipY); g.rotate(-0.55 * sk.lean);
+    [-1, 1].forEach(function (sd) {
+      g.strokeStyle = rim ? col() : 'rgba(170,180,192,.9)'; g.lineWidth = 0.013 + grow;
+      g.beginPath(); g.moveTo(sd * 0.25, -0.05); g.lineTo(sd * 0.38, 0.47); g.stroke();
+    });
+    g.fillStyle = col('#7a2c14'); g.beginPath(); g.moveTo(-0.1, 0.02); g.lineTo(0.1, 0.02); g.lineTo(0.14, -0.3); g.quadraticCurveTo(0, -0.34, -0.14, -0.3); g.closePath(); g.fill();
+    if (rim) { g.lineWidth = grow; g.strokeStyle = col(); g.stroke(); }
+    else { g.fillStyle = 'rgba(0,0,0,.35)'; g.fillRect(-0.11, -0.06, 0.22, 0.05); g.fillStyle = 'rgba(255,190,150,.18)'; g.fillRect(-0.005, -0.3, 0.01, 0.26); }
+    [-1, 1].forEach(function (sd) {
+      g.strokeStyle = col('#5e2210'); g.lineWidth = 0.068 + grow;
+      g.beginPath(); g.moveTo(sd * 0.12, -0.27); g.lineTo(sd * 0.22, -0.16); g.lineTo(sd * 0.25, -0.05); g.stroke();
+      g.fillStyle = col('#0a0d12'); g.beginPath(); g.arc(sd * 0.25, -0.05, 0.036 + grow / 2, 0, 7); g.fill();
+    });
+    g.fillStyle = col('#1b2029'); g.beginPath(); g.arc(0, -0.39, 0.074 + grow / 2, 0, 7); g.fill();
+    if (!rim) {
+      var gl = g.createLinearGradient(-0.06, 0, 0.06, 0); gl.addColorStop(0, '#ff8a3d'); gl.addColorStop(0.5, '#ffd27a'); gl.addColorStop(1, '#ff6a3d');
+      g.shadowColor = 'rgba(255,170,90,.8)'; g.shadowBlur = 10; g.fillStyle = gl; rr(-0.058, -0.408, 0.116, 0.038, 0.017); g.fill(); g.shadowBlur = 0;
+    }
+    g.restore();
+  }
+  function draw() {
+    var camX = sk.x * 0.5, uc = us + Z0, k = H / 812;
     g.setTransform(DPR, 0, 0, DPR, 0, 0);
-    var sky = g.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, '#05070a'); sky.addColorStop(1, '#10141b'); g.fillStyle = sky; g.fillRect(0, 0, W, H);
-    var spot = g.createRadialGradient(W * 0.5, H * 0.66, 10, W * 0.5, H * 0.66, Math.max(W, H) * 0.55);
-    spot.addColorStop(0, 'rgba(210,225,255,.28)'); spot.addColorStop(1, 'rgba(210,225,255,0)'); g.fillStyle = spot; g.fillRect(0, 0, W, H);
-    slope(); var sg = g.createLinearGradient(0, H * 0.7, 0, H); sg.addColorStop(0, '#d9e1ea'); sg.addColorStop(1, '#7b8592'); g.fillStyle = sg; g.fill();
-    if (!reduce) { acc += dt; while (acc > 0.016) { emit(9); acc -= 0.016; } }
+    g.translate(W / 2, H * 0.75); g.rotate(sk.lean * 0.05); g.translate(-W / 2, -H * 0.75);
+    var X0 = -W * 0.2, WW = W * 1.4;
+    var sky = g.createLinearGradient(0, 0, 0, hy); sky.addColorStop(0, '#04060a'); sky.addColorStop(1, '#1c2533'); g.fillStyle = sky; g.fillRect(X0, -H * 0.2, WW, hy + H * 0.2);
+    var lx = vx0 - f * camX / 40;
+    var glow = g.createRadialGradient(lx, hy - H * 0.02, 0, lx, hy - H * 0.02, Math.max(W, H) * 0.6); glow.addColorStop(0, 'rgba(214,226,250,.55)'); glow.addColorStop(0.25, 'rgba(160,180,215,.18)'); glow.addColorStop(1, 'rgba(160,180,215,0)');
+    g.fillStyle = glow; g.fillRect(X0, -H * 0.2, WW, H * 1.4);
+    g.beginPath(); g.moveTo(X0, hy + 2); for (var i = 0; i < ridge.length; i++) g.lineTo(X0 + i / (ridge.length - 1) * WW - camX * 6, hy - 8 * k - (ridge[i] + 0.5) * 70 * k); g.lineTo(X0 + WW, hy + 2); g.closePath(); g.fillStyle = 'rgba(88,102,124,.85)'; g.fill();
+    var gr = g.createLinearGradient(0, hy, 0, H); gr.addColorStop(0, '#a9b6c8'); gr.addColorStop(0.25, '#6f7b8c'); gr.addColorStop(1, '#1e242d'); g.fillStyle = gr; g.fillRect(X0, hy, WW, H * 0.8);
+    var glare = g.createRadialGradient(lx, hy + 6, 0, lx, hy + 6, W * 0.4); glare.addColorStop(0, 'rgba(235,242,255,.5)'); glare.addColorStop(1, 'rgba(235,242,255,0)'); g.fillStyle = glare; g.fillRect(X0, hy, WW, H * 0.4);
+    sparks.forEach(function (p) { var q = proj(p.x, p.u, camX, uc); if (q.d < 0.5 || q.x < 0 || q.x > W) return; var a = (0.5 + 0.5 * Math.sin(p.p + t * 3)) * Math.min(1, 12 / q.d) * 0.7; g.fillStyle = 'rgba(240,246,255,' + a.toFixed(3) + ')'; var rs = Math.max(0.6, 5 / q.d) * k; g.fillRect(q.x, q.y, rs, rs); });
+    [-0.13, 0.13].forEach(function (off) {
+      g.beginPath(); var started = false;
+      for (var j = 0; j < track.length; j += 2) { var q = proj(track[j].x + off, track[j].u, camX, uc); if (!started) { g.moveTo(q.x, q.y); started = true; } else g.lineTo(q.x, q.y); }
+      var q2 = proj(sk.x + off, us, camX, uc); g.lineTo(q2.x, q2.y);
+      g.strokeStyle = 'rgba(52,62,78,.55)'; g.lineWidth = 1.6 * k; g.stroke();
+    });
+    trees.sort(function (a, b) { return a.u - b.u; });
+    trees.forEach(function (tr) { if (uc - tr.u > Z0) drawTree(tr, camX, uc); });
+    var sh = g.createRadialGradient(0, 0, 0, 0, 0, 1); sh.addColorStop(0, 'rgba(8,12,18,.55)'); sh.addColorStop(1, 'rgba(8,12,18,0)');
+    g.save(); g.translate(sk.sx + (sk.sx - lx) * 0.12, sk.sy + sk.s * 0.13); g.scale(sk.s * 0.2, sk.s * 0.13); g.fillStyle = sh; g.beginPath(); g.arc(0, 0, 1, 0, 7); g.fill(); g.restore();
+    drawSkier(0); drawSkier(1);
     g.globalCompositeOperation = 'lighter';
-    for (var i = spray.length - 1; i >= 0; i--) {
-      var p = spray[i]; p.life += dt; if (p.life > p.max) { spray.splice(i, 1); continue; }
-      p.vy += 260 * dt; p.vx *= 0.985; p.vy *= 0.985; p.x += p.vx * dt; p.y += p.vy * dt;
-      var a = 1 - p.life / p.max; g.fillStyle = 'rgba(235,242,255,' + (a * 0.55).toFixed(3) + ')';
-      g.beginPath(); g.arc(p.x, p.y, p.r * (1 + p.life * 1.4), 0, Math.PI * 2); g.fill();
-    }
+    spray.forEach(function (p) { var a = 1 - p.life / p.max; g.fillStyle = 'rgba(232,240,255,' + (a * 0.5).toFixed(3) + ')'; g.beginPath(); g.arc(p.x, p.y, p.r * (1 + p.life * 1.6), 0, 7); g.fill(); });
+    clouds.forEach(function (o) { var a = Math.sin(Math.PI * o.life / o.max) * 0.16, r = o.r * (1 + o.life * 0.9); var cg = g.createRadialGradient(o.x, o.y, 0, o.x, o.y, r); cg.addColorStop(0, 'rgba(225,235,250,' + a.toFixed(3) + ')'); cg.addColorStop(1, 'rgba(225,235,250,0)'); g.fillStyle = cg; g.fillRect(o.x - r, o.y - r, r * 2, r * 2); });
     g.globalCompositeOperation = 'source-over';
-    g.fillStyle = 'rgba(255,255,255,.75)';
-    for (var j = 0; j < flakes.length; j++) {
-      var f = flakes[j]; if (!reduce) { f.y += f.v * dt; f.x += f.d * dt; }
-      if (f.y > H) { f.y = -4; f.x = rnd(0, W); } if (f.x < -4) f.x = W + 4;
-      g.beginPath(); g.arc(f.x, f.y, f.r, 0, Math.PI * 2); g.fill();
-    }
-    var vig = g.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.3, W / 2, H / 2, Math.max(W, H) * 0.75);
-    vig.addColorStop(0, 'rgba(0,0,0,0)'); vig.addColorStop(1, 'rgba(0,0,0,.6)'); g.fillStyle = vig; g.fillRect(0, 0, W, H);
-    requestAnimationFrame(frame);
+    trees.forEach(function (tr) { if (uc - tr.u <= Z0) drawTree(tr, camX, uc); });
+    g.fillStyle = 'rgba(255,255,255,.7)';
+    flakes.forEach(function (fl) { g.beginPath(); g.arc(fl.x, fl.y, fl.r, 0, 7); g.fill(); });
+    g.setTransform(DPR, 0, 0, DPR, 0, 0);
+    var vig = g.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.3, W / 2, H / 2, Math.max(W, H) * 0.75); vig.addColorStop(0, 'rgba(0,0,0,0)'); vig.addColorStop(1, 'rgba(0,0,0,.62)'); g.fillStyle = vig; g.fillRect(0, 0, W, H);
+    g.save(); g.globalAlpha = 0.05; g.translate(Math.random() * 160, Math.random() * 160); g.fillStyle = grain; g.fillRect(-160, -160, W + 320, H + 320); g.restore();
   }
-  resize(); addEventListener('resize', resize);
-  if (reduce) emit(900);
-  requestAnimationFrame(frame);
+  resize();
+  for (var w = 0; w < 150; w++) step(1 / 60);
+  if (reduce) { while (Math.abs(Math.sin(t / PERIOD * Math.PI * 2)) < 0.95) step(1 / 60); draw(); addEventListener('resize', function () { resize(); draw(); }); return; }
+  addEventListener('resize', resize);
+  var last = performance.now();
+  (function frame(now) { var dt = Math.min(0.05, (now - last) / 1000); last = now; step(dt); draw(); requestAnimationFrame(frame); })(last);
 })();
 </script>
 </body>
