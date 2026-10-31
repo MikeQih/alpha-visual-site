@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Alpha Visual Hands</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@400;500&display=swap">
+<style>
+/* Layout: one full-height hero; a live dot-matrix canvas of two reaching hands behind centred copy. Single light look by design. */
+:root{
+  color-scheme: light;
+  --bg:#f7f7f5;
+  --ink:#111111;
+  --mute:#9a9a9a;
+  --sub:#7b7b7b;
+  --link:#3a3a3a;
+  --logo:#8d8d8d;
+  --sans:"Inter","Noto Sans SC",system-ui,-apple-system,"PingFang SC",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+.hero{position:relative;height:100%;min-height:660px;overflow:hidden}
+#dots{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+nav{position:relative;z-index:3;display:flex;justify-content:center;align-items:center;gap:clamp(18px,2.6vw,40px);padding-top:36px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));font-size:13.5px}
+.brand{display:flex;align-items:center;gap:8px;margin-right:10px;font-weight:600;font-size:15px;letter-spacing:-.01em;color:var(--ink)}
+nav button{font:inherit;background:none;border:0;cursor:pointer}
+.nl{color:var(--link);transition:color .2s}
+.nl:hover,.nl:focus-visible{color:#000}
+.pill{margin-left:10px;padding:10px 21px;border-radius:999px;background:var(--ink);color:#fff !important;font-weight:500;transition:transform .25s}
+.pill:hover{transform:translateY(-1px)}
+nav button:focus-visible,.cta button:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:999px}
+
+.copy{position:absolute;z-index:3;left:50%;top:24.5%;transform:translateX(-50%);width:min(92vw,720px);text-align:center}
+h1{font-weight:500;letter-spacing:-.035em;line-height:1.04;font-size:clamp(38px,3.75vw,68px);text-wrap:balance}
+h1 span{display:block;color:var(--mute)}
+.sub{margin:20px auto 0;max-width:380px;color:var(--sub);font-size:clamp(13px,1.02vw,15.5px);line-height:1.5;text-wrap:balance}
+.cta{position:relative;display:inline-block;margin-top:clamp(34px,3.6vw,52px)}
+.cta::before{content:"";position:absolute;left:10%;right:10%;bottom:-6px;height:16px;border-radius:50%;background:linear-gradient(90deg,#ffcf5a,#7dffa8,#5ad7ff,#9b7bff,#ff6fd8,#ffb36b);filter:blur(9px);opacity:.85;transition:all .3s}
+.cta:hover::before{opacity:1;filter:blur(12px);bottom:-9px}
+.cta button{position:relative;display:inline-block;padding:11px 20px;border:0;border-radius:999px;background:var(--ink);color:#fff;font:500 13.5px/1.2 var(--sans);cursor:pointer;transition:transform .3s}
+.cta:hover button{transform:translateY(-1px)}
+
+.logos{position:absolute;z-index:3;left:0;right:0;bottom:clamp(28px,6vh,64px);display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:clamp(26px,4.6vw,66px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));color:var(--logo);font-size:clamp(14px,1.18vw,17px);font-weight:500;letter-spacing:-.01em}
+.logos .lead{font-size:clamp(11px,.85vw,13px);letter-spacing:.08em;text-transform:uppercase;color:#a8a8a6}
+
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,10px);z-index:9;max-width:calc(100vw - 32px);padding:10px 16px;border-radius:999px;background:var(--ink);color:#fff;font:500 13px/1.4 var(--sans);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media (max-width:760px){
+  nav{justify-content:space-between;padding:22px max(18px,env(safe-area-inset-right,0px)) 0 max(18px,env(safe-area-inset-left,0px))}
+  nav .nl:not(.pill){display:none}
+  .copy{top:20%}
+  .logos{gap:14px 24px;font-size:13px}
+  .logos .lead{flex-basis:100%;text-align:center}
+}
+</style>
+</head>
+<body>
+
+
+<section class="hero" id="hero">
+  <canvas id="dots" aria-hidden="true"></canvas>
+  <nav aria-label="Main">
+    <span class="brand">
+      <svg width="16" height="18" viewBox="0 0 16 18" aria-hidden="true"><path fill="currentColor" d="M6.3 0h3.4L16 18h-3.5l-1.4-4.2H4.9L3.5 18H0zm-.4 10.9h4.2L8 4.5z"/></svg>
+      Alpha Visual
+    </span>
+    <button type="button" class="nl" data-soon>Work</button>
+    <button type="button" class="nl" data-soon>Packages</button>
+    <button type="button" class="nl" data-soon>Process</button>
+    <button type="button" class="nl" data-soon>About</button>
+    <button type="button" class="nl" data-contact>Contact</button>
+    <button type="button" class="nl pill" data-contact>Book a call</button>
+  </nav>
+  <div class="copy">
+    <h1><span>Human taste.</span>AI speed.</h1>
+    <p class="sub">AI product films, launch visuals and brand sites for businesses in Singapore.<br>产品宣传片、视觉物料与品牌官网，3 天起交付。</p>
+    <div class="cta"><button type="button" data-contact>Book a call</button></div>
+  </div>
+  <div class="logos" aria-label="What Alpha Visual makes">
+    <span class="lead">What we make</span>
+    <span>Product visuals</span><span>Product films</span><span>Event kits</span><span>Brand launches</span><span>Monthly content</span>
+  </div>
+</section>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  /* ---------- toast for placeholder links ---------- */
+  var toastEl = document.getElementById('toast'), toastT;
+  function toast(m) { toastEl.textContent = m; toastEl.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(function () { toastEl.classList.remove('show'); }, 2400); }
+  document.querySelectorAll('[data-soon]').forEach(function (b) { b.addEventListener('click', function () { toast('这一页还在制作中'); }); });
+  document.querySelectorAll('[data-contact]').forEach(function (b) { b.addEventListener('click', function () { toast('联系方式待补充：WhatsApp · 微信 · Email'); }); });
+
+  /* ---------- hand source tiles (placeholder art, drawn in code) ---------- */
+  var TW = 420, TH = 202;
+  function tile(mirror, paint) {
+    var c = document.createElement('canvas'); c.width = TW; c.height = TH;
+    var g = c.getContext('2d');
+    g.fillStyle = '#fff'; g.fillRect(0, 0, TW, TH);
+    if (mirror) { g.translate(TW, 0); g.scale(-1, 1); }
+    g.translate(0, TH / 2); g.scale(1, 1.55); g.translate(0, -TH / 2 - 4);
+    try { g.filter = 'blur(1.2px)'; } catch (e) {}
+    paint(g);
+    return c;
+  }
+  function shade(g, light) {
+    var gr = g.createLinearGradient(0, 50, 0, 165);
+    gr.addColorStop(0, light ? '#c4c4c4' : '#b6b6b6');
+    gr.addColorStop(0.45, light ? '#999' : '#8b8b8b');
+    gr.addColorStop(1, light ? '#626262' : '#505050');
+    return gr;
+  }
+  function limb(g, p, w, s) {
+    g.strokeStyle = s; g.lineWidth = w; g.lineCap = 'round'; g.lineJoin = 'round';
+    g.beginPath(); g.moveTo(p[0][0], p[0][1]);
+    if (p.length === 3) g.quadraticCurveTo(p[1][0], p[1][1], p[2][0], p[2][1]);
+    else for (var i = 1; i < p.length; i++) g.lineTo(p[i][0], p[i][1]);
+    g.stroke();
+  }
+  function palm(g, x, y, rx, ry, s) { g.fillStyle = s; g.beginPath(); g.ellipse(x, y, rx, ry, -0.08, 0, Math.PI * 2); g.fill(); }
+  function arm(g, s) { limb(g, [[-30, 120], [110, 114], [212, 104]], 60, s); }
+
+  var tiles = {
+    /* pointing pair */
+    LA: tile(false, function (g) { var s = shade(g); arm(g, s); palm(g, 252, 104, 46, 30, s);
+      limb(g, [[285, 94], [340, 88], [402, 86]], 17, s); limb(g, [[288, 108], [324, 116], [318, 134]], 17, s);
+      limb(g, [[282, 120], [310, 130], [298, 145]], 16, s); limb(g, [[272, 130], [292, 141], [280, 152]], 14, s);
+      limb(g, [[262, 84], [290, 74], [314, 80]], 17, s); }),
+    RA: tile(true, function (g) { var s = shade(g); arm(g, s); palm(g, 252, 106, 46, 30, s);
+      limb(g, [[285, 96], [336, 98], [390, 110]], 17, s); limb(g, [[288, 110], [332, 124], [352, 150]], 17, s);
+      limb(g, [[282, 121], [318, 137], [330, 162]], 16, s); limb(g, [[272, 131], [298, 147], [300, 168]], 14, s);
+      limb(g, [[262, 86], [292, 80], [316, 90]], 17, s); }),
+    /* open pair */
+    LB: tile(false, function (g) { var s = shade(g); arm(g, s); palm(g, 255, 104, 48, 34, s);
+      limb(g, [[290, 88], [345, 70], [394, 58]], 16, s); limb(g, [[296, 100], [355, 95], [406, 92]], 17, s);
+      limb(g, [[292, 113], [346, 122], [394, 132]], 16, s); limb(g, [[282, 125], [322, 143], [356, 158]], 14, s);
+      limb(g, [[255, 76], [280, 52], [300, 40]], 17, s); }),
+    RB: tile(true, function (g) { var s = shade(g, true); arm(g, s); palm(g, 255, 106, 48, 34, s);
+      limb(g, [[290, 92], [340, 80], [372, 60]], 16, s); limb(g, [[296, 102], [352, 96], [388, 76]], 17, s);
+      limb(g, [[292, 114], [346, 112], [382, 96]], 16, s); limb(g, [[282, 125], [330, 129], [364, 118]], 14, s);
+      limb(g, [[258, 126], [286, 146], [314, 150]], 17, s); })
+  };
+
+  /* ---------- dot-matrix renderer ---------- */
+  var hero = document.getElementById('hero');
+  var cvs = document.getElementById('dots'), ctx = cvs.getContext('2d');
+  var fA = document.createElement('canvas'), fB = document.createElement('canvas');
+  var gA = fA.getContext('2d', { willReadFrequently: true }), gB = fB.getContext('2d', { willReadFrequently: true });
+  var LOOP = 20, LEVELS = [0, 0.26, 0.52, 0.78, 1];
+  var W, H, DPR, step, rowStep, cols, rows, R, seeds;
+  function fract(x) { return x - Math.floor(x); }
+  function hash(a, b) { return fract(Math.sin(a * 127.1 + b * 311.7) * 43758.5453); }
+  function smooth(a, b, x) { var t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); }
+  function mixAt(t, on, off, dur) { return smooth(on, on + dur, t) * (1 - smooth(off, off + dur, t)); }
+
+  function resize() {
+    W = hero.clientWidth || window.innerWidth; H = hero.clientHeight || window.innerHeight;
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    cvs.width = Math.round(W * DPR); cvs.height = Math.round(H * DPR);
+    step = Math.max(5, W / 205); rowStep = step * 2.05;
+    cols = Math.ceil(W / step); rows = Math.ceil(H / rowStep);
+    R = step * 0.46;
+    fA.width = fB.width = cols; fA.height = fB.height = rows;
+    seeds = new Float32Array(cols * rows);
+    for (var j = 0; j < rows; j++) for (var i = 0; i < cols; i++) seeds[j * cols + i] = 0.55 * hash(i, j) + 0.45 * hash(j * 3.1, 7.7);
+  }
+
+  function drawHand(f, tileC, left, t) {
+    var a = 2 * Math.PI * t / LOOP, ph = left ? 0 : Math.PI, portrait = H > W;
+    var hw = W * (portrait ? 0.66 : 0.53), hh = hw * (0.40 * 1520) / (0.47 * 2688);
+    var cy = H * (portrait ? 0.66 : 0.54);
+    var reach = (0.035 * Math.sin(a + ph) + 0.012 * Math.sin(2 * a + 1.3 + ph)) * W;
+    var sc = 1 + 0.07 * Math.sin(a + 0.9 + ph);
+    var rot = (left ? 1 : -1) * 0.045 * Math.sin(a + 2.1 + ph);
+    var x = left ? reach - W * 0.045 : W - hw + W * 0.045 - reach;
+    var px = left ? 0 : W;
+    f.save();
+    f.scale(cols / W, rows / H);
+    f.translate(px, cy); f.rotate(rot); f.scale(sc, sc); f.translate(-px, -cy);
+    f.drawImage(tileC, x, cy - hh / 2, hw, hh);
+    f.restore();
+  }
+
+  function render(t) {
+    if (!cols || !rows || W < 2 || H < 2) return;
+    t = ((t % LOOP) + LOOP) % LOOP;
+    gA.setTransform(1, 0, 0, 1, 0, 0); gA.fillStyle = '#fff'; gA.fillRect(0, 0, cols, rows);
+    gB.setTransform(1, 0, 0, 1, 0, 0); gB.fillStyle = '#fff'; gB.fillRect(0, 0, cols, rows);
+    drawHand(gA, tiles.LA, true, t); drawHand(gA, tiles.RA, false, t);
+    drawHand(gB, tiles.LB, true, t); drawHand(gB, tiles.RB, false, t);
+    var dA = gA.getImageData(0, 0, cols, rows).data, dB = gB.getImageData(0, 0, cols, rows).data;
+
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0d0d0d';
+    ctx.beginPath();
+    var mL = mixAt(t, 6.2, 14.6, 1.6), mR = mixAt(t, 2.4, 10.4, 1.6);
+    var tick = Math.floor(t * 7), portrait = H > W;
+    var qzW = portrait ? 0.44 : 0.2, qzC = portrait ? 0.33 : 0.385;
+    var half = cols / 2, TAU = Math.PI * 2;
+    for (var j = 0; j < rows; j++) {
+      var shift = hash(j, tick) > 0.965 ? Math.round((hash(tick, j) - 0.5) * 8) : 0;
+      var y = (j + 0.5) * rowStep;
+      var ey = (y / H - qzC) / 0.085;
+      for (var i = 0; i < cols; i++) {
+        var si = Math.min(cols - 1, Math.max(0, i - shift));
+        var m = i < half ? mL : mR;
+        var seed = seeds[j * cols + i];
+        var d = seed < m ? dB : dA;
+        var lum = d[(j * cols + si) * 4] / 255;
+        var v = (1 - lum - 0.16) / 0.42;
+        if (v <= 0) continue;
+        if (v > 1) v = 1;
+        if (m > 0.001 && m < 0.999) {
+          var gap = Math.abs(seed - m);
+          if (gap < 0.12) { v *= gap / 0.12; if (hash(i + tick, j) <= 0.4) v *= 0.3; }
+        }
+        v *= 0.86 + 0.14 * Math.sin(t * 3.2 + seed * 40);
+        var cxn = Math.abs((i + 0.5) / cols - 0.5);
+        v *= smooth(0.035, 0.11, cxn);
+        v *= smooth(0.85, 1.25, Math.hypot(cxn / qzW, ey));
+        var lvl = 0;
+        for (var k = LEVELS.length - 1; k > 0; k--) { if (v >= LEVELS[k] - 0.13) { lvl = k; break; } }
+        if (!lvl) continue;
+        var r = lvl === 1 ? R * 0.38 : R * LEVELS[lvl];
+        var x = (i + 0.5) * step;
+        ctx.moveTo(x + r, y); ctx.arc(x, y, r, 0, TAU);
+      }
+    }
+    ctx.fill();
+  }
+  window.__render = render;
+
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var t0 = performance.now();
+  function loop(now) { render((now - t0) / 1000); requestAnimationFrame(loop); }
+  resize();
+  if (reduce) render(0); else requestAnimationFrame(loop);
+  var rT;
+  if (window.ResizeObserver) new ResizeObserver(function () { var w = hero.clientWidth, h = hero.clientHeight; if (w && h && (Math.abs(w - W) > 1 || Math.abs(h - H) > 1)) { resize(); if (reduce) render(0); } }).observe(hero);
+  window.addEventListener('resize', function () { clearTimeout(rT); rT = setTimeout(function () { resize(); if (reduce) render(0); }, 100); });
+})();
+</script>
+
+</body>
+</html>

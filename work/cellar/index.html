@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Harbour &amp; Vine Cellar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Inter+Tight:wght@500;600&family=Noto+Sans+SC:wght@500&family=Noto+Serif+SC:wght@700&display=swap">
+<style>
+/* Layout: one fixed screen. An endless shelf of wine and spirit gift boxes across the middle; the active box turns out to show its front. Paper grain over everything. Single warm-paper look by design. */
+:root{
+  color-scheme: light;
+  --paper:#EDEBE6;
+  --sheet:#F4F2ED;
+  --ink:#141414;
+  --muted:#6D6A63;
+  --wine:#7A1F2B;
+  --rule:rgba(20,20,20,.9);
+  --ease:cubic-bezier(.2,.8,.2,1);
+  --H:min(46vh,31vw);
+  --sans:"Inter Tight","Noto Sans SC",system-ui,sans-serif;
+  --serif:"Newsreader",Georgia,serif;
+}
+@media (max-width:767px){ :root{ --H:min(60vw,40svh) } }
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+@media (pointer:fine){ html,body,button,a{cursor:none} }
+.lbl{font-family:var(--sans);font-weight:600;font-size:10.5px;line-height:1;letter-spacing:.09em;text-transform:uppercase}
+.box{display:inline-flex;align-items:center;height:21px;padding:0 8px;border:1px solid var(--rule)}
+
+.grain{position:fixed;inset:0;z-index:40;pointer-events:none;opacity:.55;mix-blend-mode:multiply;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45  0 0 0 0 .42  0 0 0 0 .38  0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* top bar */
+.top{position:fixed;left:0;right:0;top:0;height:84px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 max(32px,env(safe-area-inset-right,0px)) 0 max(32px,env(safe-area-inset-left,0px));z-index:30}
+.top .l{justify-self:start}
+.top .r{justify-self:end}
+.logo{display:flex;flex-direction:column;align-items:center;gap:5px;color:var(--wine)}
+.logo .zh{font-family:"Noto Serif SC",serif;font-weight:700;font-size:22px;letter-spacing:.04em}
+.logo .en{font-family:var(--sans);font-weight:600;font-size:9px;letter-spacing:.34em;padding-left:.34em}
+
+/* category tabs */
+.tabs{position:fixed;left:50%;top:calc(50% - var(--H) / 2 - 86px);transform:translateX(-50%);display:flex;z-index:30}
+.tabs .ind{position:absolute;left:0;top:0;height:23px;background:var(--wine);transition:width .6s var(--ease),transform .6s var(--ease)}
+.tabs button{position:relative;height:23px;padding:0 11px;border:1px solid var(--rule);margin-left:-1px;white-space:nowrap;transition:color .45s}
+.tabs button.on{color:#fff}
+
+/* shelf */
+.shelf{position:fixed;left:0;right:0;top:calc(50% - var(--H) / 2 - 40px);height:calc(var(--H) + 80px);perspective:2200px;perspective-origin:50% 50%;touch-action:pan-y;z-index:10}
+.stage{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d}
+.tape{position:absolute;left:0;top:0;width:0;height:0;transform-style:preserve-3d;will-change:transform}
+.face{position:absolute;top:calc(var(--H) / -2);height:var(--H);backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:2px;background-size:100% 100%;background-color:#d8d2c6}
+.face::after{content:"";position:absolute;inset:0;border-radius:inherit;background:#000;opacity:var(--shade,0);pointer-events:none}
+.sp{width:var(--ws);left:calc(var(--ws) / -2);transform:translateZ(calc(var(--d) / 2))}
+.cv{width:var(--d);left:calc(var(--d) / -2);transform:rotateY(90deg) translateZ(calc(var(--ws) / 2));box-shadow:0 30px 60px -28px rgba(20,16,10,.55)}
+.probe{position:fixed;left:-9999px;top:0;width:1px;height:var(--H)}
+
+/* play ring */
+.play{position:fixed;z-index:20;width:42px;height:42px;margin:-21px 0 0 -21px;border-radius:50%;border:1px solid var(--wine);background:rgba(237,235,230,.75);color:var(--wine);display:grid;place-items:center;transform:scale(0)}
+.play svg{margin-left:2px}
+
+/* caption */
+.cap{position:fixed;left:50%;top:calc(50% + var(--H) / 2 + 30px);transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:9px;pointer-events:none;z-index:20}
+.mask{position:relative;overflow:hidden;width:min(92vw,760px);text-align:center}
+.mask .ln{display:block}
+.mask .ln + .ln{position:absolute;left:0;right:0;top:0}
+.c-title{font-family:var(--serif);font-weight:400;font-size:31px;line-height:1.12;letter-spacing:-.01em}
+.c-sub{color:var(--wine);font-weight:500}
+.c-year{font-family:var(--sans);font-weight:500;font-size:11px;letter-spacing:.08em}
+
+.arrow{position:fixed;z-index:20;top:calc(50% + var(--H) / 2 + 40px);width:44px;height:44px;display:grid;place-items:center}
+.arrow.prev{left:max(20px,env(safe-area-inset-left,0px))}
+.arrow.next{right:max(20px,env(safe-area-inset-right,0px))}
+.foot{position:fixed;left:max(32px,env(safe-area-inset-left,0px));right:max(32px,env(safe-area-inset-right,0px));bottom:calc(26px + env(safe-area-inset-bottom,0px));display:flex;justify-content:space-between;z-index:30}
+
+/* cursor */
+.cur{position:fixed;left:0;top:0;width:58px;height:58px;margin:-29px 0 0 -29px;z-index:100;pointer-events:none;display:none;opacity:0;transition:opacity .3s}
+.cur.live{opacity:1}
+@media (pointer:fine){ .cur{display:block} }
+.cur .ring{position:absolute;inset:0;border:1.5px solid var(--ink);border-radius:50%;transition:transform .5s var(--ease),background-color .4s var(--ease),border-color .4s var(--ease)}
+.cur .dot{position:absolute;left:26px;top:26px;width:6px;height:6px;border-radius:50%;background:var(--ink);transition:transform .4s var(--ease)}
+.cur .txt{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:#fff;font:600 10px/1.25 var(--sans);letter-spacing:.1em;transform:scale(0);transition:transform .45s var(--ease)}
+.cur.spine .ring{transform:scale(.72)}
+.cur.btn .ring{transform:scale(.55)}
+.cur.btn .dot{transform:scale(0)}
+.cur.open .ring{transform:scale(1.75);background:var(--wine);border-color:var(--wine)}
+.cur.open .dot{transform:scale(0)}
+.cur.open .txt{transform:scale(1)}
+
+/* detail sheet */
+.detail{position:fixed;inset:0;z-index:60;background:var(--sheet);visibility:hidden;display:grid;grid-template-columns:1fr 1fr;gap:4vw;padding:110px 6vw 56px 7vw;overflow:hidden}
+.detail .close{position:absolute;left:32px;top:31px}
+.detail .logo{position:absolute;left:50%;top:0;height:84px;transform:translateX(-50%);justify-content:center}
+.dm{align-self:center;display:flex;flex-direction:column;gap:18px;max-width:520px}
+.dm > div{overflow:hidden}
+.dm > div > *{display:block}
+.d-title{font-family:var(--serif);font-weight:400;font-size:clamp(44px,5.4vw,84px);line-height:1;letter-spacing:-.025em}
+.d-meta{color:var(--muted)}
+.d-note{font-family:var(--serif);font-size:17px;line-height:1.5;max-width:42ch}
+.d-credit{font-family:var(--serif);font-style:italic;font-size:15px;color:var(--muted)}
+.d-btn{display:inline-flex !important;align-items:center;height:44px;padding:0 20px;margin-top:10px;border:1px solid var(--wine);color:var(--wine)}
+.poster{justify-self:center;align-self:center;height:min(100%,78vh);aspect-ratio:474/900;max-width:100%}
+.poster svg{width:100%;height:100%;display:block}
+
+.toast{position:fixed;left:50%;bottom:calc(64px + env(safe-area-inset-bottom,0px));transform:translate(-50%,10px);z-index:90;max-width:calc(100vw - 32px);padding:10px 16px;background:var(--ink);color:#fff;font:500 13px/1.4 var(--sans);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+button:focus-visible{outline:2px solid var(--wine);outline-offset:2px}
+
+@media (max-width:767px){
+  .top{height:64px;padding:0 max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px))}
+  .logo .zh{font-size:17px}
+  .logo .en{font-size:7.5px}
+  .top .lbl,.foot .lbl{font-size:9px}
+  .top .r{display:none}
+  .tabs{top:calc(50% - var(--H) / 2 - 70px)}
+  .tabs button{padding:0 7px;font-size:9px}
+  .c-title{font-size:24px}
+  .arrow.prev{left:max(6px,env(safe-area-inset-left,0px))}
+  .arrow.next{right:max(6px,env(safe-area-inset-right,0px))}
+  .foot{left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px))}
+  .detail{grid-template-columns:1fr;gap:24px;padding:84px 22px 40px;overflow-y:auto;align-content:start}
+  .detail .close{left:16px;top:21px}
+  .detail .logo{height:64px}
+  .poster{order:-1;height:46svh}
+  .d-title{font-size:42px}
+  .d-note{font-size:16px}
+}
+</style>
+</head>
+<body>
+
+
+<div class="probe" id="probe"></div>
+
+<header class="top">
+  <button type="button" class="l lbl box" id="backlink">Work / 作品</button>
+  <div class="logo" aria-label="Harbour and Vine"><span class="zh">港湾酒窖</span><span class="en">HARBOUR &amp; VINE</span></div>
+  <span class="r lbl">Cellar · Singapore 新加坡</span>
+</header>
+
+<nav class="tabs" id="tabs" aria-label="Categories">
+  <span class="ind" id="tabind"></span>
+</nav>
+
+<section class="shelf" id="shelf" aria-label="Cellar shelf">
+  <div class="stage" id="stage"></div>
+</section>
+
+<button type="button" class="play" id="play" aria-label="Open bottle"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1l9 5-9 5z" fill="currentColor"/></svg></button>
+
+<div class="cap" aria-live="polite">
+  <div class="mask c-title" id="cTitle"></div>
+  <div class="mask lbl c-sub" id="cSub"></div>
+  <div class="mask c-year" id="cYear"></div>
+</div>
+
+<button type="button" class="arrow prev" id="prev" aria-label="Previous bottle"><svg width="18" height="10" viewBox="0 0 18 10" aria-hidden="true"><path d="M5 1 1 5l4 4M1 5h16" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></button>
+<button type="button" class="arrow next" id="next" aria-label="Next bottle"><svg width="18" height="10" viewBox="0 0 18 10" aria-hidden="true"><path d="M13 1l4 4-4 4M17 5H1" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></button>
+
+<footer class="foot">
+  <span class="lbl">Concept by Alpha Visual · 概念作品</span>
+  <span class="lbl"><button type="button" class="lbl" data-soon>IG</button> / <button type="button" class="lbl" data-soon>WA</button></span>
+</footer>
+
+<div class="grain" aria-hidden="true"></div>
+
+<section class="detail" id="detail" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+  <button type="button" class="close lbl box" id="close">Close / 关闭</button>
+  <div class="logo" aria-hidden="true"><span class="zh">港湾酒窖</span><span class="en">HARBOUR &amp; VINE</span></div>
+  <div class="dm" id="dm">
+    <div><span class="lbl" style="color:var(--wine)" id="dSub"></span></div>
+    <div><span class="d-title" id="dTitle"></span></div>
+    <div><span class="lbl d-meta" id="dMeta"></span></div>
+    <div><span class="d-note" id="dNote"></span></div>
+    <div><span class="d-credit">Concept by Alpha Visual for a fictional cellar. 概念作品</span></div>
+    <div><button type="button" class="lbl d-btn" data-enquire>Enquire / 询价</button></div>
+  </div>
+  <div class="poster" aria-hidden="true">
+    <svg viewBox="0 0 474 900">
+      <defs>
+        <filter id="ink" x="-50%" y="-50%" width="200%" height="200%"><feTurbulence type="fractalNoise" baseFrequency=".011" numOctaves="3" seed="7" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="120" xChannelSelector="R" yChannelSelector="G"/></filter>
+        <mask id="inkmask" maskUnits="userSpaceOnUse" x="-200" y="-200" width="874" height="1300">
+          <g filter="url(#ink)" fill="#fff" id="blobs">
+            <circle cx="150" cy="330" r="0"/><circle cx="340" cy="600" r="0"/><circle cx="250" cy="120" r="0"/><circle cx="90" cy="760" r="0"/><circle cx="400" cy="250" r="0"/><circle cx="260" cy="860" r="0"/><circle cx="230" cy="470" r="0"/>
+          </g>
+        </mask>
+        <clipPath id="pclip"><rect width="474" height="900"/></clipPath>
+      </defs>
+      <g clip-path="url(#pclip)"><image id="poster" width="474" height="900" preserveAspectRatio="none" mask="url(#inkmask)"/></g>
+    </svg>
+  </div>
+</section>
+
+<div class="cur" id="cur" aria-hidden="true"><span class="ring"></span><span class="dot"></span><span class="txt">OPEN<br>打开</span></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var E = 'cubic-bezier(.2,.8,.2,1)';
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* ---------- data ---------- */
+  var ITEMS = [
+    { id: 'marlow', name: 'Marlow Ridge', kind: 'Shiraz', zh: '马洛岭 · 西拉', region: 'Barossa Valley', year: '2019', cat: 'red', abv: '14.5%', note: 'Dark plum, black pepper and a long cocoa finish. Built for slow-cooked beef and a cold room.' },
+    { id: 'coteau', name: 'Coteau Noir', kind: 'Pinot Noir', zh: '黑坡 · 黑皮诺', region: 'Burgundy', year: '2020', cat: 'red', abv: '13%', note: 'Red cherry and forest floor, light on its feet. The bottle to open when nobody can agree.' },
+    { id: 'aure', name: 'Saint-Aure', kind: 'Bordeaux Blend', zh: '圣奥尔 · 波尔多', region: 'Bordeaux', year: '2018', cat: 'red', abv: '13.5%', note: 'Cassis, cedar and firm tannins that will soften for another ten years in the cellar.' },
+    { id: 'hollow', name: 'Hollow Oak', kind: 'Cabernet Sauvignon', zh: '空橡 · 赤霞珠', region: 'Napa Valley', year: '2019', cat: 'red', abv: '14.8%', note: 'Blackcurrant, vanilla and toasted oak. Generous, loud and made for the main course.' },
+    { id: 'lune', name: 'Blanc de Lune', kind: 'Champagne', zh: '月白 · 香槟', region: 'Champagne', year: 'NV', cat: 'white', abv: '12%', note: 'Green apple, brioche and a fine, quick bead. Pour it at the start of the evening.' },
+    { id: 'kessler', name: 'Kessler', kind: 'Riesling', zh: '凯斯勒 · 雷司令', region: 'Mosel', year: '2021', cat: 'white', abv: '11%', note: 'Lime, slate and a touch of honey. Bright acidity that cuts through chilli and spice.' },
+    { id: 'tide', name: 'Tidewater', kind: 'Sauvignon Blanc', zh: '潮汐 · 长相思', region: 'Marlborough', year: '2022', cat: 'white', abv: '12.5%', note: 'Passionfruit, cut grass and sea air. The easy answer for seafood and warm weather.' },
+    { id: 'ember', name: 'Highland Ember', kind: '12 Year Single Malt', zh: '高地余烬 · 12 年', region: 'Speyside', year: '12 YR', cat: 'whisky', abv: '43%', note: 'Honeyed malt, baked apple and a soft wisp of smoke from the sherry casks.' },
+    { id: 'peat', name: 'Harbour Peat', kind: '16 Year Single Malt', zh: '港湾泥煤 · 16 年', region: 'Islay', year: '16 YR', cat: 'whisky', abv: '46%', note: 'Peat smoke, iodine and salted caramel. A coastal dram that stays on the tongue.' },
+    { id: 'kura', name: 'Kura Mist', kind: 'Blended Whisky', zh: '藏雾 · 调和威士忌', region: 'Kyoto', year: 'NAS', cat: 'whisky', abv: '43%', note: 'Pear, white flowers and Mizunara spice. Quiet enough for a highball, good enough neat.' },
+    { id: 'chishui', name: 'Chishui Reserve', kind: 'Sauce Aroma Baijiu', zh: '赤水窖藏 · 酱香', region: 'Guizhou', year: '2015', cat: 'baijiu', abv: '53%', note: 'Roasted grain, soy and dried fruit, with the long sauce-aroma finish of a cave-aged spirit.' },
+    { id: 'yuan', name: 'Yuan Xiang', kind: 'Strong Aroma Baijiu', zh: '元香 · 浓香 15 年', region: 'Sichuan', year: '15 YR', cat: 'baijiu', abv: '52%', note: 'Pineapple, rice and warm spice. A banquet bottle for toasts that run late.' }
+  ];
+  var CATS = [
+    { key: null, label: 'All / 全部', start: 0 },
+    { key: 'red', label: 'Red 红', start: 0 },
+    { key: 'white', label: 'White 白', start: 4 },
+    { key: 'whisky', label: 'Whisky 威士忌', start: 7 },
+    { key: 'baijiu', label: 'Baijiu 白酒', start: 10 }
+  ];
+  var CATNAME = { red: 'Red wine', white: 'White & sparkling', whisky: 'Whisky', baijiu: 'Baijiu' };
+  var N = ITEMS.length, TOTAL = N * 3;
+
+  /* ---------- toast ---------- */
+  var toastEl = $('toast'), tt;
+  function toast(m) { toastEl.textContent = m; toastEl.classList.add('show'); clearTimeout(tt); tt = setTimeout(function () { toastEl.classList.remove('show'); }, 2400); }
+  document.querySelectorAll('[data-soon]').forEach(function (b) { b.addEventListener('click', function () { toast('这一页还在制作中'); }); });
+  document.querySelector('[data-enquire]').addEventListener('click', function () { toast('询价入口待补充'); });
+  $('backlink').addEventListener('click', function () { toast('作品集页面还在制作中'); });
+
+  /* ---------- placeholder box art, drawn in code ---------- */
+  var PAL = {
+    red:    { box: '#5a1420', dark: '#360b12', text: '#efe6d6', label: '#efe6d6', ink: '#1b0b0d', acc: '#c9a35a' },
+    white:  { box: '#ddd0a9', dark: '#b6a273', text: '#2a2418', label: '#fbf7ec', ink: '#2a2418', acc: '#7a5c22' },
+    whisky: { box: '#2e1d11', dark: '#170e07', text: '#eadcc0', label: '#eadcc0', ink: '#120a04', acc: '#cf8f3e' },
+    baijiu: { box: '#8a1b1b', dark: '#590f0f', text: '#f3e2bf', label: '#f3e2bf', ink: '#260a0a', acc: '#dcb35c' }
+  };
+  var SC = 2;
+  function mk(w, h) { var c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+  function rnd(seed) { return function () { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }; }
+  function grain(g, w, h, a, r) { var n = Math.round(w * h / 70); for (var i = 0; i < n; i++) { g.fillStyle = r() < 0.5 ? 'rgba(0,0,0,' + a + ')' : 'rgba(255,255,255,' + a * 0.7 + ')'; g.fillRect(r() * w, r() * h, 1.3 * SC, 1.3 * SC); } }
+  function boxBg(g, w, h, p, edge) {
+    var gr = g.createLinearGradient(0, 0, w, 0);
+    gr.addColorStop(0, p.dark); gr.addColorStop(edge, p.box); gr.addColorStop(1 - edge, p.box); gr.addColorStop(1, p.dark);
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  }
+  function bottlePath(g, t, cx, y0, bw, bh) {
+    var nwR = { red: 0.26, white: 0.24, whisky: 0.3, baijiu: 0.36 }[t], nhR = { red: 0.3, white: 0.36, whisky: 0.2, baijiu: 0.16 }[t], shR = { red: 0.1, white: 0.17, whisky: 0.05, baijiu: 0.12 }[t];
+    var nw = bw * nwR, nh = bh * nhR, sh = bh * shR, L = cx - bw / 2, R = cx + bw / 2, bot = y0 + bh, r = bw * (t === 'baijiu' ? 0.42 : 0.08);
+    g.beginPath();
+    g.moveTo(cx - nw / 2, y0); g.lineTo(cx - nw / 2, y0 + nh);
+    g.bezierCurveTo(cx - nw / 2, y0 + nh + sh * 0.5, L, y0 + nh + sh * 0.4, L, y0 + nh + sh);
+    g.lineTo(L, bot - r); g.quadraticCurveTo(L, bot, L + r, bot); g.lineTo(R - r, bot); g.quadraticCurveTo(R, bot, R, bot - r);
+    g.lineTo(R, y0 + nh + sh);
+    g.bezierCurveTo(R, y0 + nh + sh * 0.4, cx + nw / 2, y0 + nh + sh * 0.5, cx + nw / 2, y0 + nh);
+    g.lineTo(cx + nw / 2, y0); g.closePath();
+    return { nh: nh, sh: sh };
+  }
+  function fitFont(g, text, weight, family, size, maxW) { do { g.font = weight + ' ' + size + 'px ' + family; size -= 1; } while (g.measureText(text).width > maxW && size > 8); return size + 1; }
+  function wrapLines(g, text, maxW) { var w = text.split(' '), out = [], line = ''; w.forEach(function (x) { var t = line ? line + ' ' + x : x; if (g.measureText(t).width > maxW && line) { out.push(line); line = x; } else line = t; }); if (line) out.push(line); return out; }
+  var SERIF = 'Newsreader, Georgia, serif', SANS = '"Inter Tight", system-ui, sans-serif';
+
+  function drawSpine(it, k) {
+    var p = PAL[it.cat], w = 142 * SC, h = 840 * SC, c = mk(w, h), g = c.getContext('2d'), r = rnd(101 + k * 7);
+    boxBg(g, w, h, p, 0.16);
+    g.fillStyle = p.acc; g.globalAlpha = 0.9; g.beginPath(); g.arc(w / 2, 78 * SC, 42 * SC, 0, 7); g.fill(); g.globalAlpha = 1;
+    g.fillStyle = p.dark; bottlePath(g, it.cat, w / 2, 42 * SC, 30 * SC, 78 * SC); g.fill();
+    g.strokeStyle = p.text; g.globalAlpha = 0.5; g.lineWidth = SC; g.beginPath(); g.moveTo(26 * SC, 140 * SC); g.lineTo(w - 26 * SC, 140 * SC); g.stroke(); g.globalAlpha = 1;
+    var title = it.name.toUpperCase();
+    g.save(); g.translate(w / 2, 168 * SC); g.rotate(Math.PI / 2);
+    var fs = fitFont(g, title, 600, SERIF, 50 * SC, 470 * SC);
+    g.fillStyle = p.text; g.textBaseline = 'middle'; g.fillText(title, 0, 0);
+    g.restore();
+    g.fillStyle = p.text; g.textAlign = 'center';
+    g.font = '600 ' + 13 * SC + 'px ' + SANS; g.fillText('H & V', w / 2, h - 150 * SC);
+    var yr = it.year; g.font = '600 ' + 13 * SC + 'px ' + SANS;
+    var bw = g.measureText(yr).width + 18 * SC;
+    g.strokeStyle = p.text; g.lineWidth = 1.5 * SC; g.strokeRect(w / 2 - bw / 2, h - 118 * SC, bw, 30 * SC);
+    g.textBaseline = 'middle'; g.fillText(yr, w / 2, h - 103 * SC);
+    grain(g, w, h, 0.05, r);
+    return c.toDataURL('image/jpeg', 0.86);
+  }
+
+  function drawCover(it, k) {
+    var p = PAL[it.cat], w = 474 * SC, h = 900 * SC, c = mk(w, h), g = c.getContext('2d'), r = rnd(301 + k * 13);
+    boxBg(g, w, h, p, 0.06);
+    g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+    g.fillStyle = p.acc; g.font = '600 ' + 14 * SC + 'px ' + SANS;
+    try { g.letterSpacing = 4 * SC + 'px'; } catch (e) {}
+    g.fillText('HARBOUR & VINE', w / 2, 64 * SC);
+    try { g.letterSpacing = '0px'; } catch (e) {}
+    g.strokeStyle = p.acc; g.globalAlpha = 0.6; g.lineWidth = SC; g.beginPath(); g.moveTo(40 * SC, 86 * SC); g.lineTo(w - 40 * SC, 86 * SC); g.stroke(); g.globalAlpha = 1;
+    g.fillStyle = p.text; g.font = '600 ' + 62 * SC + 'px ' + SERIF;
+    var lines = wrapLines(g, it.name, w - 80 * SC);
+    lines.forEach(function (ln, i) { g.fillText(ln, w / 2, 160 * SC + i * 62 * SC); });
+    var ky = 160 * SC + (lines.length - 1) * 62 * SC + 40 * SC;
+    g.fillStyle = p.acc; g.font = '600 ' + 13 * SC + 'px ' + SANS;
+    try { g.letterSpacing = 2.6 * SC + 'px'; } catch (e) {}
+    g.fillText(it.kind.toUpperCase(), w / 2, ky);
+    try { g.letterSpacing = '0px'; } catch (e) {}
+    g.fillStyle = p.acc; g.globalAlpha = 0.24; g.beginPath(); g.arc(w / 2, 600 * SC, 150 * SC, 0, 7); g.fill(); g.globalAlpha = 1;
+    var bwid = { red: 118, white: 112, whisky: 156, baijiu: 176 }[it.cat] * SC, top = 370 * SC, bh = 440 * SC;
+    var sh = bottlePath(g, it.cat, w / 2, top, bwid, bh);
+    g.fillStyle = p.dark; g.fill();
+    g.save(); g.clip();
+    g.fillStyle = p.label; g.globalAlpha = 0.14; g.fillRect(w / 2 - bwid * 0.36, top, bwid * 0.12, bh); g.globalAlpha = 1;
+    var ly = top + sh.nh + sh.sh + bh * 0.16, lh = bh * 0.32;
+    g.fillStyle = p.label; g.fillRect(w / 2 - bwid / 2, ly, bwid, lh);
+    g.fillStyle = p.ink; g.font = '600 ' + Math.round(bwid * 0.2) + 'px ' + SERIF;
+    var ini = it.name.split(' ').map(function (s) { return s[0]; }).join('').slice(0, 2);
+    g.fillText(ini, w / 2, ly + lh * 0.55);
+    g.font = '600 ' + 10 * SC + 'px ' + SANS; g.fillText(it.year, w / 2, ly + lh * 0.82);
+    g.restore();
+    if (it.cat === 'baijiu') { g.fillStyle = '#c4231f'; g.fillRect(w / 2 - bwid * 0.2, top + sh.nh * 0.55, bwid * 0.4, 10 * SC); }
+    g.textAlign = 'left'; g.fillStyle = p.text; g.globalAlpha = 0.85; g.font = '600 ' + 13 * SC + 'px ' + SANS;
+    try { g.letterSpacing = 2.2 * SC + 'px'; } catch (e) {}
+    g.fillText(it.region.toUpperCase(), 40 * SC, h - 48 * SC);
+    try { g.letterSpacing = '0px'; } catch (e) {}
+    g.globalAlpha = 1;
+    g.font = '600 ' + 14 * SC + 'px ' + SANS;
+    var bw2 = g.measureText(it.abv).width + 20 * SC;
+    g.strokeStyle = p.text; g.lineWidth = 1.5 * SC; g.strokeRect(w - 40 * SC - bw2, h - 74 * SC, bw2, 36 * SC);
+    g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(it.abv, w - 40 * SC - bw2 / 2, h - 56 * SC);
+    grain(g, w, h, 0.045, r);
+    return c.toDataURL('image/jpeg', 0.86);
+  }
+  var SPINE = [], COVER = [];
+
+  /* ---------- build DOM ---------- */
+  var stage = $('stage'), tapes = [];
+  for (var v = 0; v < TOTAL; v++) {
+    var el = document.createElement('div'); el.className = 'tape';
+    var sp = document.createElement('div'); sp.className = 'face sp';
+    var cv = document.createElement('div'); cv.className = 'face cv';
+    el.appendChild(sp); el.appendChild(cv); stage.appendChild(el);
+    tapes.push({ v: v, i: v % N, el: el, sp: sp, cv: cv, lift: 0, liftT: 0 });
+  }
+  tapes.forEach(function (t) {
+    t.el.addEventListener('pointerenter', function () { hover = t.v; });
+    t.el.addEventListener('pointerleave', function () { if (hover === t.v) hover = -1; });
+    t.el.addEventListener('click', function () {
+      if (dragMoved) return;
+      var r = rel(t.v);
+      if (Math.abs(r) < 0.5) openDetail(); else { T = Math.round(T + r); }
+    });
+  });
+  function paintFaces() { tapes.forEach(function (t) { t.sp.style.backgroundImage = 'url(' + SPINE[t.i] + ')'; t.cv.style.backgroundImage = 'url(' + COVER[t.i] + ')'; }); }
+
+  var tabsEl = $('tabs'), tabInd = $('tabind'), tabBtns = [];
+  CATS.forEach(function (c, ci) {
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'lbl'; b.textContent = c.label;
+    b.addEventListener('click', function () { jumpTo(c.start); });
+    tabsEl.appendChild(b); tabBtns.push(b);
+  });
+
+  /* ---------- geometry ---------- */
+  var W, VH, H, ws, d, gap;
+  function measure() {
+    W = window.innerWidth; VH = window.innerHeight;
+    H = $('probe').getBoundingClientRect().height || Math.min(VH * 0.46, W * 0.31);
+    ws = H * 142 / 840; d = H * 474 / 900; gap = H * 0.03;
+    stage.style.setProperty('--ws', ws + 'px'); stage.style.setProperty('--d', d + 'px');
+  }
+  function B(r) { return Math.abs(r) < 1 ? (r + Math.sin(Math.PI * r) / Math.PI) / 2 : (r > 0 ? 0.5 : -0.5); }
+  function F(r) { return r * (ws + gap) + (d - ws + 1.6 * gap) * B(r); }
+  function mod(a, n) { return ((a % n) + n) % n; }
+  function smoothstep(x) { x = Math.min(1, Math.max(0, x)); return x * x * (3 - 2 * x); }
+
+  /* ---------- state ---------- */
+  var s = 7 + N, T = s, hover = -1, active = -1, isOpen = false;
+  var mx = -1, my = -1, cx = -100, cy = -100, tiltX = 0, tiltY = 0, onCover = false, overBtn = false;
+  var dragging = false, dragMoved = false, dragX0 = 0, dragT0 = 0, wheelT;
+  function rel(v) { return mod(v - s + TOTAL / 2, TOTAL) - TOTAL / 2; }
+  function jumpTo(idx) { var cur = Math.round(T), dd = mod(idx - cur, N); if (dd > N / 2) dd -= N; T = cur + dd; }
+
+  /* ---------- caption ---------- */
+  function swap(el, text, dir) {
+    var span = document.createElement('span'); span.className = 'ln'; span.textContent = text;
+    if (reduce || !el.firstChild || !span.animate) { el.innerHTML = ''; el.appendChild(span); return; }
+    var olds = Array.prototype.filter.call(el.children, function (c) { return !c.dataset.leaving; });
+    el.appendChild(span);
+    span.animate([{ transform: 'translateY(' + dir * 105 + '%)' }, { transform: 'translateY(0)' }], { duration: 650, easing: E, fill: 'both' });
+    olds.forEach(function (o) {
+      o.dataset.leaving = '1';
+      var cur = getComputedStyle(o).transform;
+      var a = o.animate([{ transform: cur === 'none' ? 'translateY(0)' : cur }, { transform: 'translateY(' + -dir * 105 + '%)' }], { duration: 650, easing: E, fill: 'both' });
+      a.onfinish = function () { o.remove(); };
+    });
+  }
+  function setActive(i, dir) {
+    active = i; var it = ITEMS[i];
+    swap($('cTitle'), it.name, dir);
+    swap($('cSub'), it.region.toUpperCase() + ' / ' + it.zh, dir);
+    swap($('cYear'), it.year + ' · ' + it.abv, dir);
+    var ci = CATS.findIndex(function (c) { return c.key === it.cat; });
+    tabBtns.forEach(function (b, k) { b.classList.toggle('on', k === ci); });
+    var b = tabBtns[ci];
+    tabInd.style.width = b.offsetWidth + 'px';
+    tabInd.style.transform = 'translateX(' + b.offsetLeft + 'px)';
+  }
+
+  /* ---------- cursor ---------- */
+  var curEl = $('cur');
+  addEventListener('pointermove', function (e) { mx = e.clientX; my = e.clientY; overBtn = !!(e.target.closest && e.target.closest('button,a')) && !e.target.closest('.tape'); });
+
+  /* ---------- inputs ---------- */
+  var shelf = $('shelf');
+  shelf.addEventListener('pointerdown', function (e) { if (isOpen) return; dragging = true; dragMoved = false; dragX0 = e.clientX; dragT0 = T; });
+  addEventListener('pointermove', function (e) {
+    if (!dragging) return;
+    var dx = e.clientX - dragX0;
+    if (!dragMoved && Math.abs(dx) > 5) dragMoved = true;
+    if (dragMoved) T = dragT0 - dx / (ws + gap);
+  });
+  addEventListener('pointerup', function () { if (!dragging) return; dragging = false; if (dragMoved) { T = Math.round(T); setTimeout(function () { dragMoved = false; }, 0); } });
+  addEventListener('wheel', function (e) {
+    if (isOpen) return;
+    var dlt = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    T += dlt / (ws + gap) * 0.5;
+    clearTimeout(wheelT); wheelT = setTimeout(function () { T = Math.round(T); }, 160);
+  }, { passive: true });
+  $('prev').addEventListener('click', function () { T = Math.round(T) - 1; });
+  $('next').addEventListener('click', function () { T = Math.round(T) + 1; });
+  $('play').addEventListener('click', openDetail);
+  $('close').addEventListener('click', closeDetail);
+  addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { closeDetail(); return; }
+    if (isOpen) return;
+    if (e.key === 'ArrowLeft') T = Math.round(T) - 1;
+    else if (e.key === 'ArrowRight') T = Math.round(T) + 1;
+    else if (e.key === 'Enter' && (document.activeElement === document.body || !document.activeElement)) openDetail();
+  });
+
+  /* ---------- detail ---------- */
+  var detail = $('detail'), sheetAnim = null, inkStart = 0, inkRaf = 0;
+  var blobs = Array.prototype.slice.call($('blobs').children), DELAYS = [0, 120, 220, 300, 360, 420, 180];
+  function activeCoverRect() {
+    var best = null; tapes.forEach(function (t) { if (Math.abs(rel(t.v)) < 0.5) best = t; });
+    return best ? best.cv.getBoundingClientRect() : { left: W / 2 - d / 2, right: W / 2 + d / 2, top: VH / 2 - H / 2, bottom: VH / 2 + H / 2, width: d, height: H };
+  }
+  function clipFor(r) { return 'inset(' + r.top + 'px ' + (W - r.right) + 'px ' + (VH - r.bottom) + 'px ' + r.left + 'px round 3px)'; }
+  function openDetail() {
+    if (isOpen) return;
+    T = Math.round(T);
+    var it = ITEMS[mod(Math.round(T), N)];
+    $('dSub').textContent = it.region.toUpperCase() + ' / ' + it.zh;
+    $('dTitle').textContent = it.name;
+    $('dMeta').textContent = it.year + ' / ' + CATNAME[it.cat].toUpperCase() + ' / ' + it.abv;
+    $('dNote').textContent = it.note;
+    $('poster').setAttribute('href', COVER[mod(Math.round(T), N)]);
+    blobs.forEach(function (b) { b.setAttribute('r', 0); });
+    var r = activeCoverRect();
+    detail.getAnimations().forEach(function (a) { a.cancel(); });
+    detail.style.visibility = 'visible';
+    isOpen = true;
+    detail.style.transformOrigin = (r.left + r.width / 2) + 'px ' + (r.top + r.height / 2) + 'px';
+    var dur = reduce ? 1 : 1050;
+    sheetAnim = detail.animate([{ clipPath: clipFor(r), transform: 'rotate(-4.5deg)' }, { clipPath: 'inset(0px 0px 0px 0px round 0px)', transform: 'rotate(0deg)' }], { duration: dur, easing: 'cubic-bezier(.76,0,.18,1)', fill: 'both' });
+    Array.prototype.forEach.call($('dm').children, function (wrap, i) {
+      wrap.firstElementChild.animate([{ transform: 'translateY(110%)' }, { transform: 'translateY(0)' }], { duration: reduce ? 1 : 900, delay: reduce ? 0 : 620 + i * 75, easing: E, fill: 'both' });
+    });
+    inkStart = performance.now() + (reduce ? -5000 : 520);
+    cancelAnimationFrame(inkRaf);
+    (function ink(now) {
+      var el = now - inkStart;
+      blobs.forEach(function (b, k) { var p = Math.min(1, Math.max(0, (el - DELAYS[k]) / 1250)); b.setAttribute('r', (720 * (1 - Math.pow(1 - p, 3))).toFixed(1)); });
+      if (el < 2400) inkRaf = requestAnimationFrame(ink);
+    })(performance.now());
+    setTimeout(function () { $('close').focus({ preventScroll: true }); }, reduce ? 0 : 700);
+  }
+  function closeDetail() {
+    if (!isOpen) return;
+    var r = activeCoverRect();
+    var a = detail.animate([{ clipPath: 'inset(0px 0px 0px 0px round 0px)', transform: 'rotate(0deg)' }, { clipPath: clipFor(r), transform: 'rotate(-4.5deg)' }], { duration: reduce ? 1 : 850, easing: 'cubic-bezier(.76,0,.18,1)', fill: 'both' });
+    a.onfinish = function () { detail.style.visibility = 'hidden'; detail.getAnimations().forEach(function (x) { x.cancel(); }); Array.prototype.forEach.call($('dm').children, function (w) { w.firstElementChild.getAnimations().forEach(function (x) { x.cancel(); }); }); isOpen = false; };
+  }
+
+  /* ---------- frame ---------- */
+  var last = performance.now(), playEl = $('play');
+  function frame(now) {
+    var dt = Math.min(0.05, (now - last) / 1000); last = now;
+    var k = reduce ? 1e3 : (dragging && dragMoved ? 18 : 5.2);
+    s += (T - s) * (1 - Math.exp(-k * dt));
+    if (Math.abs(T - s) < 1e-4) s = T;
+    if (s > TOTAL * 4 || s < -TOTAL * 4) { var sh = Math.round(s / TOTAL) * TOTAL; s -= sh; T -= sh; }
+    var a = mod(Math.round(s), N);
+    if (a !== active) setActive(a, Math.sign(T - s) || 1);
+
+    var shelfCY = VH / 2;
+    onCover = !isOpen && Math.abs(mx - W / 2) < 0.55 * d && Math.abs(my - shelfCY) < 0.55 * H && Math.abs(T - s) < 0.3;
+    var tY = onCover ? (mx - W / 2) / (0.55 * d) * 9 : (mx < 0 ? 0 : (mx - W / 2) / W * 5);
+    var tX = onCover ? -(my - shelfCY) / (H / 2) * 6 : 0;
+    var kt = 1 - Math.exp(-7 * dt);
+    tiltY += (tY - tiltY) * kt; tiltX += (tX - tiltX) * kt;
+
+    var lim = W / 2 + 1.5 * d;
+    for (var n = 0; n < tapes.length; n++) {
+      var t = tapes[n], r = rel(t.v), x = F(r);
+      if (Math.abs(x) > lim) { if (t.vis !== false) { t.el.style.visibility = 'hidden'; t.vis = false; } continue; }
+      if (t.vis !== true) { t.el.style.visibility = 'visible'; t.vis = true; }
+      t.liftT = (hover === t.v && Math.abs(r) > 0.5 && !isOpen) ? 1 : 0;
+      t.lift += (t.liftT - t.lift) * (reduce ? 1 : 1 - Math.exp(-12 * dt));
+      var o = smoothstep(Math.max(0, 1 - Math.abs(r)));
+      var ry = -90 * o + tiltY * o, rx = tiltX * o, rz = -4.5 * o, tz = o * 0.2 * H, ty = -o * 0.025 * H - t.lift * 0.045 * H;
+      t.el.style.transform = 'translate3d(' + x.toFixed(2) + 'px,' + ty.toFixed(2) + 'px,' + tz.toFixed(2) + 'px) rotateZ(' + rz.toFixed(3) + 'deg) rotateX(' + rx.toFixed(3) + 'deg) rotateY(' + ry.toFixed(3) + 'deg)';
+      t.el.style.zIndex = Math.round(100 - Math.abs(r) * 4);
+      t.sp.style.setProperty('--shade', (o * 0.55).toFixed(3));
+      t.cv.style.setProperty('--shade', ((1 - o) * 0.5).toFixed(3));
+    }
+
+    var ps = isOpen ? 0 : smoothstep(Math.max(0, 1 - Math.abs(T - s) * 3));
+    playEl.style.left = (W / 2 - 0.5 * d - 6) + 'px';
+    playEl.style.top = (shelfCY + 0.36 * H) + 'px';
+    playEl.style.transform = 'scale(' + ps.toFixed(3) + ')';
+    playEl.style.pointerEvents = ps > 0.5 ? 'auto' : 'none';
+
+    var kc = 1 - Math.exp(-16 * dt);
+    cx += (mx - cx) * kc; cy += (my - cy) * kc;
+    curEl.style.transform = 'translate3d(' + cx.toFixed(1) + 'px,' + cy.toFixed(1) + 'px,0)';
+    var state = isOpen ? (overBtn ? 'btn' : '') : onCover ? 'open' : (hover >= 0 && Math.abs(rel(hover)) > 0.5) ? 'spine' : overBtn ? 'btn' : '';
+    if (curEl.dataset.s !== state) { curEl.dataset.s = state; curEl.className = 'cur' + (mx >= 0 ? ' live' : '') + (state ? ' ' + state : ''); }
+    if (mx >= 0 && !curEl.classList.contains('live')) curEl.classList.add('live');
+    shelf.style.cursor = '';
+    requestAnimationFrame(frame);
+  }
+  shelf.addEventListener('click', function (e) { if (!dragMoved && onCover && !e.target.closest('.tape')) openDetail(); });
+
+  /* ---------- start ---------- */
+  measure();
+  addEventListener('resize', function () { measure(); var b = tabBtns.find(function (x) { return x.classList.contains('on'); }); if (b) { tabInd.style.width = b.offsetWidth + 'px'; tabInd.style.transform = 'translateX(' + b.offsetLeft + 'px)'; } });
+  var fontJobs = ['600 40px Newsreader', '600 14px "Inter Tight"'].map(function (f) { return document.fonts ? document.fonts.load(f, 'Ae') : Promise.resolve(); });
+  Promise.race([Promise.all(fontJobs).catch(function () {}), new Promise(function (r) { setTimeout(r, 2500); })]).then(function () {
+    ITEMS.forEach(function (it, k) { SPINE[k] = drawSpine(it, k); COVER[k] = drawCover(it, k); });
+    paintFaces();
+  });
+  requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
