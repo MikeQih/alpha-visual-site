@@ -23,5 +23,10 @@ Static HTML, no build step. Netlify publishes the repository root.
 | `/work/worlds/` | Glass controller, one product in four states |
 | `/work/explorer/` | SOLA headphone explorer, hotspots and cutaways |
 | `/work/footer/` | Studio footer, mascot eyes follow the cursor |
+| `/work/prism/` | halo prism hero, dispersion + three.js glass |
+| `/work/drift/` | Jellyfish scroll hero with word ribbons (WebGL2) |
+| `/work/medusa/` | Medusa JF-4 procedural robot jellyfish simulator |
+| `/work/studio/` | Studio profile bento |
+| `/work/contact/` | Contact CTA with smoke shader and footer |
 
 Images and figures in the work pages are placeholders drawn in code until real assets replace them.
