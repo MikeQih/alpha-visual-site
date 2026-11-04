@@ -20,5 +20,8 @@ Static HTML, no build step. Netlify publishes the repository root.
 | `/work/lookbook/` | Product lookbook, depth line |
 | `/work/poster/` | Red brand poster, product builds on scroll |
 | `/work/freight/` | Logistics client concept, scroll-scrubbed aerial (set `src` on `<video id="clip">` to use a real film) |
+| `/work/worlds/` | Glass controller, one product in four states |
+| `/work/explorer/` | SOLA headphone explorer, hotspots and cutaways |
+| `/work/footer/` | Studio footer, mascot eyes follow the cursor |
 
 Images and figures in the work pages are placeholders drawn in code until real assets replace them.
