@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Alpha Visual Poster</title>
+<meta name="description" content="A signal-red brand poster by Alpha Visual: as you scroll, a product dresses itself piece by piece, then the studio data card.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&text=%E9%98%BF%E5%B0%94%E6%B3%95%E8%A7%86%E8%A7%89&display=swap" rel="stylesheet">
+<style>
+/* Layout: section 1 is a tall red poster (giant stretched title behind a flat-vector product that assembles as you scroll, falling petals on top); section 2 is a cream studio-data panel with a statement card. Single look by design. */
+:root{color-scheme:light;--u:calc(100vw/1507);--side:calc(121*var(--u));--red:#E40038;--deep:#b8002c;--cream:#FAF3E9;--ink:#201408;--gold:#e9b44c}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--red)}
+body{background:var(--cream);color:var(--ink);font-family:Archivo,system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+.grain::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.16;mix-blend-mode:multiply;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.rule{position:absolute;top:calc(84*var(--u));bottom:0;width:1px;background:rgba(250,243,233,.5)}
+.rule.l{left:var(--side)}.rule.r{right:var(--side)}
+.side{position:absolute;font-size:calc(11*var(--u));font-weight:800;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;transform:translate(-50%,-50%) rotate(-90deg)}
+.side.rt{transform:translate(50%,-50%) rotate(90deg)}
+
+.hero{position:relative;height:calc(1440*var(--u));background:var(--red);color:var(--cream);overflow:hidden}
+.nav{position:relative;z-index:6;height:calc(84*var(--u));display:flex;justify-content:center;align-items:center;gap:calc(90*var(--u));border-bottom:1px solid rgba(250,243,233,.5)}
+.nav a{font-size:calc(30*var(--u));font-weight:900;font-stretch:84%;text-transform:uppercase;letter-spacing:.01em}
+.nav a:hover{opacity:.75}
+.kanji{position:absolute;left:0;right:0;top:calc(158*var(--u));text-align:center;font-family:"ZCOOL KuaiLe","PingFang SC","Noto Sans SC",sans-serif;font-size:calc(56*var(--u));letter-spacing:.06em;line-height:1}
+.ttl{position:absolute;left:50%;transform:translateX(-50%);overflow:hidden}
+.ttl svg{display:block;width:100%;height:100%;overflow:visible}
+.ttl text{font-family:Anton,Impact,sans-serif;fill:var(--cream)}
+.t1{top:calc(252*var(--u));width:calc(700*var(--u));height:calc(258*var(--u))}
+.t2{top:calc(526*var(--u));width:calc(1120*var(--u));height:calc(266*var(--u))}
+.stage{position:absolute;left:50%;top:calc(54*var(--u));width:calc(1386*var(--u));height:calc(1386*var(--u));margin-left:calc(-693*var(--u));z-index:2}
+.cam{position:absolute;inset:0;transform-origin:50% 36%;will-change:transform}
+.cam svg{display:block;width:100%;height:100%;overflow:visible}
+#petals{position:absolute;left:0;top:0;width:100%;height:100%;z-index:4;pointer-events:none}
+
+.bio{position:relative;background:var(--cream);padding-bottom:calc(140*var(--u))}
+.bio .rule{top:0;background:rgba(228,0,56,.55)}
+.bio .side{color:var(--red)}
+.row{position:relative;height:calc(324*var(--u));border-bottom:1px solid var(--red)}
+.crest{position:absolute;left:calc(200*var(--u));top:calc(40*var(--u));width:calc(290*var(--u))}
+.crest small{display:block;font-size:calc(10.5*var(--u));font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--red)}
+.crest svg{display:block;width:calc(232*var(--u));height:calc(232*var(--u));margin-top:calc(14*var(--u))}
+.stats{position:absolute;left:calc(560*var(--u));right:calc(150*var(--u));top:calc(56*var(--u));bottom:calc(56*var(--u));display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:1fr 1fr;gap:calc(26*var(--u)) calc(40*var(--u))}
+.stats div{display:flex;flex-direction:column;justify-content:center;gap:calc(8*var(--u));border-left:1px solid rgba(228,0,56,.35);padding-left:calc(22*var(--u))}
+.stats small{font-size:calc(10.5*var(--u));font-weight:700;letter-spacing:.08em;color:var(--red)}
+.stats b{font-size:calc(31*var(--u));font-weight:900;font-stretch:90%;text-transform:uppercase;line-height:1.05}
+.card{position:relative;margin:calc(110*var(--u)) calc(134*var(--u)) 0;border:1px solid rgba(228,0,56,.7);padding:calc(90*var(--u)) calc(90*var(--u)) calc(100*var(--u));text-align:center}
+.card i{position:absolute;width:calc(30*var(--u));height:calc(30*var(--u));border-radius:50%;background:var(--cream);border:1px solid rgba(228,0,56,.7);transform:translate(-50%,-50%)}
+.card i:nth-of-type(1){left:0;top:0}.card i:nth-of-type(2){left:100%;top:0}.card i:nth-of-type(3){left:0;top:100%}.card i:nth-of-type(4){left:100%;top:100%}
+.card .fan{display:block;width:calc(118*var(--u));height:calc(118*var(--u));margin:0 auto calc(40*var(--u))}
+.card h2{font-size:calc(50*var(--u));font-weight:900;font-stretch:96%;line-height:1;text-transform:uppercase;color:var(--ink)}
+.card h2 span{display:block}
+.card p{max-width:500px;margin:calc(40*var(--u)) auto 0;font-size:max(14px,calc(19*var(--u)));line-height:1.5;color:rgba(32,20,8,.78)}
+.card .cta{display:inline-flex;align-items:center;gap:10px;margin-top:calc(40*var(--u));height:max(44px,calc(54*var(--u)));padding:0 max(20px,calc(30*var(--u)));border-radius:99px;background:var(--red);color:var(--cream);font-weight:800;font-size:max(13px,calc(16*var(--u)));letter-spacing:.06em;text-transform:uppercase}
+.foot{position:relative;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:calc(80*var(--u)) calc(134*var(--u)) 0;font-size:max(12px,calc(13*var(--u)));color:rgba(32,20,8,.6)}
+.foot a{border-bottom:1px solid currentColor;color:var(--ink)}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,10px);z-index:9;max-width:calc(100vw - 32px);padding:10px 16px;border-radius:999px;background:var(--ink);color:var(--cream);font-size:13px;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+a:focus-visible{outline:2px solid var(--cream);outline-offset:3px}
+@media (max-width:767px){
+  :root{--u:calc(100vw/1300);--side:22px}
+  .hero{height:max(100svh,178vw)}
+  .nav{height:56px;gap:22px}.nav a{font-size:15px}
+  .rule{top:56px}
+  .side{display:none}
+  .kanji{top:86px;font-size:26px}
+  .t1{top:130px}.t2{top:calc(130px + 290*var(--u))}
+  .stage{top:auto;bottom:0;width:150vw;height:150vw;margin-left:-75vw}
+  .row{height:auto;padding:28px 0 32px;display:flex;flex-direction:column;gap:22px}
+  .crest,.stats{position:static;width:auto;margin:0 40px}
+  .crest svg{width:120px;height:120px}
+  .crest small,.stats small{font-size:10px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:none;gap:16px}
+  .stats b{font-size:18px}
+  .card{margin:40px 22px 0;padding:44px 20px 48px}
+  .card i{width:16px;height:16px}
+  .card .fan{width:64px;height:64px;margin-bottom:22px}
+  .card h2{font-size:min(4vw,22px)}
+  .foot{margin:32px 22px 0}
+}
+</style>
+</head>
+<body>
+<section class="hero grain" id="hero">
+  <nav class="nav" aria-label="Main"><a href="/">Work</a><a href="/work/glass/">Studio</a><a href="#" data-contact>Contact</a></nav>
+  <div class="rule l"></div><div class="rule r"></div>
+  <div id="sidesHero"></div>
+  <div class="kanji" id="kanji" lang="zh">阿尔法视觉</div>
+  <div class="ttl t1" data-w="700" data-h="258"><svg aria-hidden="true"><text>ALPHA</text></svg></div>
+  <div class="ttl t2" data-w="1120" data-h="266"><svg aria-hidden="true"><text>VISUAL</text></svg></div>
+  <h1 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Alpha Visual</h1>
+  <div class="stage" id="stage"><div class="cam" id="cam">
+    <svg viewBox="0 0 2048 2048" aria-hidden="true">
+      <defs>
+        <clipPath id="bodyClip"><path id="bodyPath" d="M929 528V770C929 880 724 880 724 1000V1820Q724 1860 780 1860H1268Q1324 1860 1324 1820V1000C1324 880 1119 880 1119 770V528Z"/></clipPath>
+        <pattern id="hatch" width="22" height="22" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><rect width="22" height="22" fill="#efe0c9"/><rect width="5" height="22" fill="#201408" opacity=".12"/></pattern>
+        <pattern id="cloudp" width="120" height="120" patternUnits="userSpaceOnUse"><path d="M20 70a18 18 0 0 1 30-14a20 20 0 0 1 36 4a14 14 0 0 1 10 24H26a14 14 0 0 1-6-14Z" fill="none" stroke="#e9b44c" stroke-width="5" opacity=".7"/></pattern>
+      </defs>
+      <!-- gift box panels, behind the bottle -->
+      <g id="pFlaps">
+        <path d="M960 720L400 880L440 1850H980Z" fill="#b8002c" stroke="#201408" stroke-width="14" stroke-linejoin="round"/>
+        <path d="M940 770L452 912L486 1806H950Z" fill="url(#cloudp)" stroke="#FAF3E9" stroke-width="6" stroke-linejoin="round"/>
+        <path d="M1088 720L1648 880L1608 1850H1068Z" fill="#b8002c" stroke="#201408" stroke-width="14" stroke-linejoin="round"/>
+        <path d="M1108 770L1596 912L1562 1806H1098Z" fill="url(#cloudp)" stroke="#FAF3E9" stroke-width="6" stroke-linejoin="round"/>
+      </g>
+      <!-- the plain product: plinth and bottle -->
+      <g id="pBase">
+        <ellipse cx="1024" cy="1952" rx="600" ry="54" fill="#201408" opacity=".18"/>
+        <path d="M484 1860V1925A540 66 0 0 0 1564 1925V1860Z" fill="#efe0c9" stroke="#201408" stroke-width="12" stroke-linejoin="round"/>
+        <ellipse cx="1024" cy="1860" rx="540" ry="66" fill="#FAF3E9" stroke="#201408" stroke-width="12"/>
+        <use href="#bodyPath" fill="#FAF3E9"/>
+        <g clip-path="url(#bodyClip)">
+          <rect x="1176" y="500" width="160" height="1400" fill="url(#hatch)"/>
+          <rect x="790" y="1020" width="40" height="760" rx="20" fill="#fff" opacity=".85"/>
+          <rect x="956" y="560" width="20" height="200" rx="10" fill="#fff" opacity=".85"/>
+        </g>
+        <use href="#bodyPath" fill="none" stroke="#201408" stroke-width="14" stroke-linejoin="round"/>
+        <rect x="904" y="490" width="240" height="44" rx="14" fill="#FAF3E9" stroke="#201408" stroke-width="12"/>
+      </g>
+      <!-- label -->
+      <g id="pLabel">
+        <rect x="760" y="1150" width="528" height="500" rx="18" fill="#E40038" stroke="#201408" stroke-width="12"/>
+        <rect x="790" y="1180" width="468" height="440" rx="8" fill="none" stroke="#FAF3E9" stroke-width="5"/>
+        <text x="1024" y="1395" text-anchor="middle" font-family="ZCOOL KuaiLe,PingFang SC,sans-serif" font-size="190" fill="#FAF3E9">视觉</text>
+        <rect x="874" y="1440" width="300" height="5" fill="#e9b44c"/>
+        <text x="1024" y="1515" text-anchor="middle" font-family="Archivo,sans-serif" font-weight="900" font-size="46" letter-spacing="6" fill="#FAF3E9">ALPHA VISUAL</text>
+        <text x="1024" y="1572" text-anchor="middle" font-family="Archivo,sans-serif" font-weight="700" font-size="28" letter-spacing="8" fill="#FAF3E9" opacity=".8">SINGAPORE · 2026</text>
+        <rect x="1168" y="1206" width="64" height="64" rx="6" fill="#201408"/>
+        <path d="M1200 1218 1222 1258H1209L1200 1240 1191 1258H1178Z" fill="#e9b44c"/>
+      </g>
+      <!-- ribbons sweeping out from the collar -->
+      <g id="pRibbon" stroke-linecap="round" fill="none">
+        <path d="M990 748C860 720 720 640 600 520" stroke="#201408" stroke-width="62"/>
+        <path d="M990 748C860 720 720 640 600 520" stroke="#e9b44c" stroke-width="40"/>
+        <path d="M1058 748C1188 720 1328 640 1448 520" stroke="#201408" stroke-width="62"/>
+        <path d="M1058 748C1188 720 1328 640 1448 520" stroke="#e9b44c" stroke-width="40"/>
+        <path d="M600 520l-52-14 30 46M1448 520l52-14-30 46" stroke="#201408" stroke-width="16" stroke-linejoin="round"/>
+      </g>
+      <!-- neck collar -->
+      <g id="pCollar">
+        <path d="M908 690H1140V790Q1024 822 908 790Z" fill="#201408" stroke="#201408" stroke-width="10" stroke-linejoin="round"/>
+        <circle cx="960" cy="742" r="12" fill="#e9b44c"/><circle cx="1024" cy="750" r="16" fill="#e9b44c"/><circle cx="1088" cy="742" r="12" fill="#e9b44c"/>
+        <path d="M916 706H1132" stroke="#e9b44c" stroke-width="6"/>
+      </g>
+      <!-- cap -->
+      <g id="pCap">
+        <path d="M872 528 900 372H1148L1176 528Z" fill="#201408" stroke="#201408" stroke-width="12" stroke-linejoin="round"/>
+        <path d="M884 470H1164M894 414H1154" stroke="#e9b44c" stroke-width="10"/>
+        <path d="M900 374Q1024 250 1148 374Z" fill="#E40038" stroke="#201408" stroke-width="12" stroke-linejoin="round"/>
+        <circle cx="1024" cy="262" r="34" fill="#e9b44c" stroke="#201408" stroke-width="10"/>
+        <path d="M1150 400C1210 430 1222 520 1206 620" stroke="#201408" stroke-width="10" fill="none"/>
+        <path d="M1188 610h36l-6 90h-24Z" fill="#E40038" stroke="#201408" stroke-width="8" stroke-linejoin="round"/>
+      </g>
+    </svg>
+  </div></div>
+  <canvas id="petals" aria-hidden="true"></canvas>
+</section>
+
+<section class="bio grain">
+  <div class="rule l"></div><div class="rule r"></div>
+  <div class="row">
+    <div class="side" style="left:calc(var(--side)/2);top:50%">STUDIO DATA</div>
+    <div class="side rt" style="right:calc(var(--side)/2);top:50%">02 / 05</div>
+    <div class="crest"><small>[ Mark of Alpha Visual ]</small>
+      <svg viewBox="-120 -120 240 240" aria-hidden="true"><path id="mokko" fill="#E40038"/><path d="M0-52 52 44H22L0 3-22 44H-52Z" fill="#FAF3E9"/></svg>
+    </div>
+    <div class="stats">
+      <div><small>STUDIO</small><b>AI visual studio</b></div>
+      <div><small>BASED IN</small><b>Singapore</b></div>
+      <div><small>DELIVERY</small><b>3 — 7 days</b></div>
+      <div><small>PACKAGES</small><b>5 + trial pack</b></div>
+      <div><small>LANGUAGES</small><b>EN · 中文</b></div>
+      <div><small>MADE WITH</small><b>AI + hand finish</b></div>
+    </div>
+  </div>
+  <div class="card">
+    <i></i><i></i><i></i><i></i>
+    <div class="side" style="left:calc(-134*var(--u) + var(--side)/2 - 1px);top:30%">03 / 05</div>
+    <div class="side" style="left:calc(-134*var(--u) + var(--side)/2 - 1px);top:70%">INTRODUCTION</div>
+    <div class="side rt" style="right:calc(-134*var(--u) + var(--side)/2 - 1px);top:50%">ALPHA VISUAL</div>
+    <svg class="fan" viewBox="0 0 120 120" aria-hidden="true"><path d="M60 104 10 46A70 70 0 0 1 110 46Z" fill="#E40038"/><path d="M60 104V36M60 104 30 40M60 104 90 40M60 104 14 54M60 104l46-50" stroke="#FAF3E9" stroke-width="3"/><circle cx="60" cy="104" r="7" fill="#201408"/></svg>
+    <h2><span>Alpha Visual turns one plain</span><span>product photo into a full</span><span>launch: key visuals, films,</span><span>posters and sites that make</span><span>a product hard to scroll past</span></h2>
+    <p>Every piece is planned with you, made with AI and finished by hand, in English and Chinese. 从一张产品图，到一整套上线物料。</p>
+    <a class="cta" href="#" data-contact>Book a call</a>
+  </div>
+  <div class="foot"><span>Product, petals and marks on this page are drawn in code as placeholders.</span><a href="/">All work</a></div>
+</section>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var toastEl = $('toast'), tt;
+  document.querySelectorAll('[data-contact]').forEach(function (b) { b.addEventListener('click', function (e) { e.preventDefault(); toastEl.textContent = '联系方式待补充：WhatsApp · 微信 · Email'; toastEl.classList.add('show'); clearTimeout(tt); tt = setTimeout(function () { toastEl.classList.remove('show'); }, 2400); }); });
+
+  /* side labels in the hero gutters */
+  var sides = $('sidesHero'), labels = [[225, '01 / 05'], [560, 'ALPHA VISUAL'], [1010, 'BRAND POSTER'], [1330, '01 / 05']], rlabels = [[225, '01 / 05'], [560, 'BRAND POSTER'], [1010, 'ALPHA VISUAL'], [1330, '01 / 05']];
+  labels.forEach(function (l) { var d = document.createElement('div'); d.className = 'side'; d.style.left = 'calc(var(--side)/2)'; d.style.top = 'calc(' + l[0] + '*var(--u))'; d.textContent = l[1]; sides.append(d); });
+  rlabels.forEach(function (l) { var d = document.createElement('div'); d.className = 'side rt'; d.style.right = 'calc(var(--side)/2)'; d.style.top = 'calc(' + l[0] + '*var(--u))'; d.textContent = l[1]; sides.append(d); });
+
+  /* five-lobed mark */
+  (function () { var d = ''; for (var i = 0; i <= 360; i += 2) { var a = (i - 90) * Math.PI / 180, r = 104 * (0.86 + 0.14 * Math.cos(5 * a + Math.PI / 2)); d += (i ? 'L' : 'M') + (Math.cos(a) * r).toFixed(1) + ' ' + (Math.sin(a) * r).toFixed(1); } $('mokko').setAttribute('d', d + 'Z'); })();
+
+  /* title: caps fill the box height, textLength fills the width */
+  function fitTitles() {
+    var cv = document.createElement('canvas').getContext('2d'); cv.font = '100px Anton, Impact, sans-serif';
+    var m = cv.measureText('H'), cap = (m.actualBoundingBoxAscent || 72) / 100;
+    document.querySelectorAll('.ttl').forEach(function (box) {
+      var w = +box.dataset.w, h = +box.dataset.h, svg = box.querySelector('svg'), t = box.querySelector('text');
+      svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h); t.setAttribute('x', 0); t.setAttribute('y', h);
+      t.setAttribute('font-size', (h / cap).toFixed(1)); t.setAttribute('textLength', w); t.setAttribute('lengthAdjust', 'spacingAndGlyphs');
+    });
+  }
+  fitTitles(); if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitTitles);
+
+  /* ---------- the product dresses itself as you scroll ---------- */
+  function eio(t) { return t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+  function eo(t) { return 1 - Math.pow(1 - t, 3); }
+  function back(s) { return function (t) { var c3 = s + 1; return 1 + c3 * Math.pow(t - 1, 3) + s * Math.pow(t - 1, 2); }; }
+  var PIECES = [
+    { el: $('pCollar'), ax: 1024, ay: 745, w: [.16, .46], s: [.72, .72], e: eo },
+    { el: $('pCap'), ax: 1024, ay: 528, w: [.22, .54], s: [.12, .30], e: back(1.25) },
+    { el: $('pFlaps'), ax: 1024, ay: 1300, w: [.30, .60], s: [.25, .65], e: eo },
+    { el: $('pRibbon'), ax: 1024, ay: 745, w: [.40, .70], s: [.12, .10], e: back(1.4) },
+    { el: $('pLabel'), ax: 1024, ay: 1150, w: [.34, .74], s: [.55, 0], e: eo }
+  ];
+  var cam = $('cam'), pS = 0, pT = 0;
+  function apply(p) {
+    var c = eio(p); cam.style.transform = 'translateY(' + (-4 * c).toFixed(3) + '%) scale(' + (1 + 0.3 * c).toFixed(4) + ')';
+    PIECES.forEach(function (k) {
+      var t = (p - k.w[0]) / (k.w[1] - k.w[0]);
+      if (t <= 0) { k.el.setAttribute('opacity', 0); return; }
+      t = Math.min(1, t); var o = Math.min(1, t / 0.07), e = k.e(t);
+      var sx = k.s[0] + (1 - k.s[0]) * e, sy = k.s[1] + (1 - k.s[1]) * e;
+      k.el.setAttribute('opacity', o.toFixed(3));
+      k.el.setAttribute('transform', 'translate(' + k.ax + ' ' + k.ay + ') scale(' + sx.toFixed(4) + ' ' + sy.toFixed(4) + ') translate(' + (-k.ax) + ' ' + (-k.ay) + ')');
+    });
+  }
+  function target() { var vh = innerHeight; return Math.max(0, Math.min(1, (scrollY - 0.06 * vh) / (0.62 * vh))); }
+
+  /* ---------- falling petals, drawn in code ---------- */
+  var pc = $('petals'), pg = pc.getContext('2d'), PW, PH, DPR, petals = [];
+  function sizeP() { var h = $('hero'); PW = h.clientWidth; PH = h.clientHeight; DPR = Math.min(2, window.devicePixelRatio || 1); pc.width = Math.round(PW * DPR); pc.height = Math.round(PH * DPR);
+    var n = Math.round(PW * PH / 26000); petals = []; for (var i = 0; i < n; i++) petals.push(newPetal(true)); }
+  function newPetal(any) { return { x: Math.random() * PW, y: any ? Math.random() * PH : -30, r: 7 + Math.random() * 11, vy: 28 + Math.random() * 46, vx: 10 + Math.random() * 26, rot: Math.random() * 6.28, vr: (Math.random() - 0.5) * 2.4, flip: Math.random() * 6.28, vf: 1 + Math.random() * 2.5, col: Math.random() < 0.7 ? '#a8002a' : '#ffd9dc', a: 0.75 + Math.random() * 0.25 }; }
+  function petal(p) {
+    pg.save(); pg.translate(p.x, p.y); pg.rotate(p.rot); pg.scale(Math.cos(p.flip) * 0.9 + 0.1, 1); pg.globalAlpha = p.a; pg.fillStyle = p.col;
+    var r = p.r; pg.beginPath(); pg.moveTo(0, -r); pg.bezierCurveTo(r * 0.9, -r * 0.7, r * 0.8, r * 0.6, 0, r); pg.bezierCurveTo(-r * 0.8, r * 0.6, -r * 0.9, -r * 0.7, 0, -r); pg.fill();
+    pg.globalAlpha = p.a * 0.35; pg.fillStyle = '#201408'; pg.beginPath(); pg.moveTo(0, -r); pg.lineTo(-r * 0.22, -r * 0.62); pg.lineTo(r * 0.22, -r * 0.62); pg.fill();
+    pg.restore();
+  }
+  addEventListener('resize', sizeP); sizeP();
+
+  /* ---------- load reveal ---------- */
+  var ez = 'cubic-bezier(.2,.8,.2,1)';
+  if (!reduce && Element.prototype.animate) {
+    document.querySelectorAll('.ttl text').forEach(function (t) { t.style.transformBox = 'fill-box'; });
+    document.querySelectorAll('.ttl text').forEach(function (t, i) { t.animate([{ transform: 'translateY(102%)' }, { transform: 'translateY(0)' }], { duration: 1100, delay: 150 + i * 140, easing: ez, fill: 'backwards' }); });
+    $('kanji').animate([{ opacity: 0, transform: 'translateY(calc(16 * var(--u)))' }, { opacity: 1, transform: 'none' }], { duration: 900, delay: 60, easing: ez, fill: 'backwards' });
+    document.querySelectorAll('.nav a, #sidesHero .side').forEach(function (el, i) { el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 700, delay: 120 + i * 25, easing: ez, fill: 'backwards' }); });
+    $('stage').animate([{ transform: 'translateY(6%)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 1300, easing: ez, fill: 'backwards' });
+  }
+
+  var last = performance.now();
+  (function loop(now) {
+    var dt = Math.min(0.05, (now - last) / 1000); last = now;
+    pT = reduce ? 1 : target(); pS += (pT - pS) * (reduce ? 1 : 0.2); if (Math.abs(pT - pS) < 0.0005) pS = pT;
+    apply(pS);
+    if (scrollY < PH) {
+      pg.setTransform(DPR, 0, 0, DPR, 0, 0); pg.clearRect(0, 0, PW, PH);
+      petals.forEach(function (p, i) {
+        if (!reduce) { p.y += p.vy * dt; p.x += (p.vx + Math.sin(now / 900 + i) * 18) * dt; p.rot += p.vr * dt; p.flip += p.vf * dt; }
+        if (p.y > PH + 30 || p.x > PW + 30) { var n = newPetal(false); n.x = Math.random() * PW * 1.1 - PW * 0.1; petals[i] = n; p = n; }
+        petal(p);
+      });
+    }
+    requestAnimationFrame(loop);
+  })(last);
+})();
+</script>
+</body>
+</html>

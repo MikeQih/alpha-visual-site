@@ -16,5 +16,9 @@ Static HTML, no build step. Netlify publishes the repository root.
 | `/work/reveal/` | Before / after cursor reveal |
 | `/work/motion/` | Product film hero (set `src` on `<video id="film">` to use a real film) |
 | `/work/process/` | Service process long scroll |
+| `/work/valley/` | Night flower valley hero (three.js) |
+| `/work/lookbook/` | Product lookbook, depth line |
+| `/work/poster/` | Red brand poster, product builds on scroll |
+| `/work/freight/` | Logistics client concept, scroll-scrubbed aerial (set `src` on `<video id="clip">` to use a real film) |
 
 Images and figures in the work pages are placeholders drawn in code until real assets replace them.
